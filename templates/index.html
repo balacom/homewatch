@@ -16,11 +16,6 @@
     .hero h1 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
     .hero-sub { color: #a8c0db; font-size: 1rem; margin-bottom: 36px; }
 
-    /* Stats */
-    .stats { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; margin-bottom: 40px; }
-    .stat-item { text-align: center; }
-    .stat-num { font-size: 2rem; font-weight: 800; color: #c10fff; display: block; }
-    .stat-label { font-size: 0.72rem; color: #a8c0db; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Search */
     .search-wrap { max-width: 640px; margin: 0 auto; position: relative; }
@@ -114,8 +109,6 @@
     @media (max-width: 600px) {
         .hero { padding: 44px 16px 36px; }
         .hero-sub { font-size: 0.875rem; margin-bottom: 24px; }
-        .stats { gap: 24px; margin-bottom: 28px; }
-        .stat-num { font-size: 1.6rem; }
         .search-field { padding: 5px 5px 5px 14px; border-radius: 10px; }
         .search-btn { padding: 10px 12px; border-radius: 8px; }
         .search-btn-text { display: none; }
@@ -132,8 +125,6 @@
         .town-card { padding: 12px 14px; }
     }
     @media (max-width: 380px) {
-        .stats { gap: 16px; }
-        .stat-num { font-size: 1.4rem; }
         .town-grid { grid-template-columns: 1fr 1fr; }
     }
 </style>
@@ -143,22 +134,7 @@
 <div class="hero">
     <div class="container">
         <h1>HDB Resale Prices in Singapore</h1>
-        <p class="hero-sub">Transaction history for {{ "{:,}".format(blocks) }} blocks across 26 towns in Singapore.</p>
-
-        <div class="stats">
-            <div class="stat-item">
-                <span class="stat-num">{{ "{:,}".format(blocks) }}</span>
-                <span class="stat-label">HDB Blocks</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-num">{{ "{:,}".format(total) }}</span>
-                <span class="stat-label">Transactions since 2017</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-num">{{ towns }}</span>
-                <span class="stat-label">Towns</span>
-            </div>
-        </div>
+        <p class="hero-sub">Search transaction history for any HDB block across Singapore.</p>
 
         <div class="search-wrap">
             <form id="search-form" action="/search" method="get">
@@ -335,4 +311,10 @@
     });
 })();
 </script>
+{% endblock %}
+
+{% block footer_stats %}
+<div style="margin-bottom:10px;color:#7a93b8;">
+    {{ "{:,}".format(blocks) }} HDB Blocks &bull; {{ "{:,}".format(total) }} Transactions since 2017 &bull; {{ towns }} Towns
+</div>
 {% endblock %}
