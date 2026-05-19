@@ -38,23 +38,21 @@
     .street-meta .s-median { font-weight: 700; color: #1b5299; }
     .street-chevron { color: #7a93b8; font-size: 0.8rem; flex-shrink: 0; transition: transform 0.2s; }
 
-    /* Block grid inside each street */
-    .block-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 8px;
-        padding: 4px 14px 14px;
+    /* Block list inside each street */
+    .block-list { padding: 0 6px 6px; }
+    .block-row {
+        display: flex; align-items: center; gap: 0;
+        padding: 8px 12px; border-radius: 6px;
+        text-decoration: none; color: inherit;
+        border-bottom: 1px solid #f0f4fa;
+        transition: background 0.1s;
     }
-    .block-card {
-        background: #f5f7fa; border: 1px solid #e5e9f0; border-radius: 8px;
-        padding: 10px 12px; text-decoration: none;
-        transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
-        display: block;
-    }
-    .block-card:hover { background: white; border-color: #1b5299; box-shadow: 0 2px 10px rgba(6,0,151,0.1); }
-    .blk-num { font-size: 0.8rem; font-weight: 700; color: #0b2447; margin-bottom: 3px; }
-    .blk-price { font-size: 0.88rem; font-weight: 800; color: #1b5299; margin-bottom: 2px; }
-    .blk-trend { font-size: 0.72rem; font-weight: 600; }
+    .block-row:last-child { border-bottom: none; }
+    .block-row:hover { background: #f0f4fa; }
+    .blk-num   { font-size: 0.85rem; font-weight: 700; color: #0b2447; width: 88px; flex-shrink: 0; }
+    .blk-price { font-size: 0.85rem; font-weight: 700; color: #1b5299; flex: 1; }
+    .blk-trend { font-size: 0.78rem; font-weight: 600; width: 72px; text-align: right; }
+    .blk-arrow { color: #c7d3e5; font-size: 11px; margin-left: 10px; flex-shrink: 0; }
     .trend-up   { color: #10b981; }
     .trend-down { color: #ef4444; }
     .trend-na   { color: #94a3b8; }
@@ -66,8 +64,10 @@
         .ts-num { font-size: 1.1rem; }
         .street-header { padding: 12px 14px; flex-wrap: wrap; gap: 6px; }
         .street-meta { gap: 10px; font-size: 0.73rem; }
-        .block-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 4px 10px 10px; }
-        .block-card { padding: 8px 10px; }
+        .block-row { padding: 8px 8px; }
+        .blk-num { width: 72px; font-size: 0.82rem; }
+        .blk-price { font-size: 0.82rem; }
+        .blk-trend { width: 60px; font-size: 0.75rem; }
     }
 </style>
 {% endblock %}
@@ -115,18 +115,19 @@
             </span>
             <span class="street-chevron">▾</span>
         </summary>
-        <div class="block-grid">
+        <div class="block-list">
             {% for blk in street.blocks %}
-            <a href="/block/{{ blk.block }}/{{ street.slug }}" class="block-card">
-                <div class="blk-num">Blk {{ blk.block }}</div>
-                <div class="blk-price">S${{ "{:,.0f}".format(blk.median_price) }}</div>
+            <a href="/block/{{ blk.block }}/{{ street.slug }}" class="block-row">
+                <span class="blk-num">Blk {{ blk.block }}</span>
+                <span class="blk-price">S${{ "{:,.0f}".format(blk.median_price) }}</span>
                 {% if blk.trend_5y is not none %}
-                <div class="blk-trend {% if blk.trend_5y >= 0 %}trend-up{% else %}trend-down{% endif %}">
+                <span class="blk-trend {% if blk.trend_5y >= 0 %}trend-up{% else %}trend-down{% endif %}">
                     {{ '▲' if blk.trend_5y >= 0 else '▼' }} {{ blk.trend_5y | abs }}%
-                </div>
+                </span>
                 {% else %}
-                <div class="blk-trend trend-na">— no trend</div>
+                <span class="blk-trend trend-na">—</span>
                 {% endif %}
+                <span class="blk-arrow">›</span>
             </a>
             {% endfor %}
         </div>
