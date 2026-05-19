@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}HomeWatch SG — HDB Resale Prices in Singapore{% endblock %}
 {% block description %}Search HDB resale prices for any block, street, town or postal code in Singapore. 351,000+ transactions since 2017 across 26 towns. Free, updated monthly.{% endblock %}
 {% block og_title %}HomeWatch SG — HDB Resale Prices in Singapore{% endblock %}
@@ -20,11 +20,13 @@
     /* Search */
     .search-wrap { max-width: 640px; margin: 0 auto; position: relative; }
     .search-field { display: flex; align-items: center; background: white; border-radius: 12px; padding: 6px 6px 6px 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-    .search-field svg { color: #94a3b8; flex-shrink: 0; margin-right: 10px; }
+    .search-field svg.search-icon { color: #94a3b8; flex-shrink: 0; margin-right: 10px; }
     .search-field input { flex: 1; border: none; outline: none; font-size: 1rem; color: #1e293b; background: transparent; padding: 10px 0; min-width: 0; }
     .search-field input::placeholder { color: #94a3b8; }
-    .search-field button { flex-shrink: 0; background: #0f172a; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-    .search-field button:hover { background: #1e3a5f; }
+    .search-clear { display: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; border: none; cursor: pointer; color: #64748b; font-size: 14px; margin-right: 6px; flex-shrink: 0; line-height: 1; transition: background 0.15s, color 0.15s; }
+    .search-clear:hover { background: #cbd5e1; color: #1e293b; }
+    .search-field button.search-btn { flex-shrink: 0; background: #0f172a; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .search-field button.search-btn:hover { background: #1e3a5f; }
 
     /* Flat type pills */
     .type-pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center; }
@@ -33,17 +35,40 @@
     .pill.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; font-weight: 600; }
 
     /* Autocomplete dropdown */
-    .ac-dropdown { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: white; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 200; display: none; overflow: hidden; }
-    .ac-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background 0.1s; }
-    .ac-item:hover, .ac-item.active { background: #f1f5f9; }
-    .ac-badge { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; }
-    .ac-badge.town { background: #dbeafe; color: #1d4ed8; }
-    .ac-badge.street { background: #dcfce7; color: #15803d; }
-    .ac-badge.block { background: #fef3c7; color: #b45309; }
-    .ac-text { display: flex; flex-direction: column; min-width: 0; }
+    .ac-dropdown {
+        position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+        background: white; border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.18); border: 1px solid #e2e8f0;
+        z-index: 200; display: none; overflow: hidden;
+        animation: acFadeIn 0.12s ease;
+    }
+    @keyframes acFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .ac-group-header {
+        padding: 8px 16px 4px;
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.6px; color: #94a3b8;
+        border-top: 1px solid #f1f5f9;
+    }
+    .ac-group-header:first-child { border-top: none; }
+    .ac-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 14px; cursor: pointer; transition: background 0.1s; }
+    .ac-item:hover, .ac-item.active { background: #f8fafc; }
+    .ac-item.active { background: #f1f5f9; }
+    .ac-icon-wrap {
+        width: 30px; height: 30px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .ac-icon-wrap.town  { background: #dbeafe; color: #1d4ed8; }
+    .ac-icon-wrap.street { background: #dcfce7; color: #15803d; }
+    .ac-icon-wrap.block { background: #fef3c7; color: #b45309; }
+    .ac-icon-wrap.recent { background: #f1f5f9; color: #64748b; }
+    .ac-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
     .ac-label { font-size: 0.9rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ac-sub { font-size: 0.75rem; color: #94a3b8; }
-    .ac-tip { padding: 8px 16px; font-size: 0.75rem; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+    .ac-label b { font-weight: 700; color: #0f172a; }
+    .ac-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 1px; }
+    .ac-arrow { color: #cbd5e1; font-size: 12px; flex-shrink: 0; }
+    .ac-tip { padding: 7px 16px; font-size: 0.72rem; color: #94a3b8; border-top: 1px solid #f1f5f9; display: flex; gap: 12px; }
+    .ac-tip kbd { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; padding: 0 4px; font-size: 0.7rem; font-family: inherit; }
 
     /* Towns section */
     .towns-section { padding: 48px 0 60px; }
@@ -83,13 +108,14 @@
             <form id="search-form" action="/search" method="get">
                 <input type="hidden" name="flat_type" id="flat-type-val" value="">
                 <div class="search-field">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <input type="text" id="search-input" name="q"
-                           placeholder="Search by block, street, town or postal code"
+                           placeholder="Block, street, town or postal code…"
                            autocomplete="off" spellcheck="false" />
-                    <button type="submit">Search</button>
+                    <button type="button" class="search-clear" id="search-clear" aria-label="Clear search">&#x2715;</button>
+                    <button type="submit" class="search-btn">Search</button>
                 </div>
                 <div class="type-pills">
                     <button type="button" class="pill active" data-val="">All types</button>
@@ -128,42 +154,94 @@
 
 <script>
 (function() {
-    const input = document.getElementById('search-input');
+    const input    = document.getElementById('search-input');
     const dropdown = document.getElementById('ac-dropdown');
-    const form = document.getElementById('search-form');
+    const form     = document.getElementById('search-form');
+    const clearBtn = document.getElementById('search-clear');
     let timer, suggestions = [], activeIdx = -1;
 
-    input.addEventListener('input', function() {
-        clearTimeout(timer);
-        const q = this.value.trim();
-        if (q.length < 2) { hide(); return; }
-        timer = setTimeout(() => fetch('/autocomplete?q=' + encodeURIComponent(q))
-            .then(r => r.json()).then(show), 200);
-    });
+    /* ── Recent searches (localStorage) ─────────────────── */
+    const RECENT_KEY = 'hw_recents_v1';
+    const MAX_RECENTS = 5;
 
-    const badgeLabel = { town: 'Town', street: 'Street', block: 'Block' };
+    function saveRecent(s) {
+        let list = getRecents().filter(r => r.label !== s.label);
+        list.unshift(Object.assign({}, s, {_recent: true}));
+        list = list.slice(0, MAX_RECENTS);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(e) {}
+    }
 
-    function show(data) {
+    function getRecents() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) { return []; }
+    }
+
+    /* ── Text helpers ─────────────────────────────────────── */
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function highlight(text, q) {
+        const safe = escHtml(text);
+        if (!q) return safe;
+        const lo = safe.toLowerCase(), ql = q.toLowerCase();
+        const idx = lo.indexOf(ql);
+        if (idx < 0) return safe;
+        return safe.slice(0, idx) + '<b>' + safe.slice(idx, idx + q.length) + '</b>' + safe.slice(idx + q.length);
+    }
+
+    /* ── SVG icons per type ──────────────────────────────── */
+    const ICONS = {
+        recent: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>',
+        town:   '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2a4 4 0 0 1 4 4c0 3.5-4 8-4 8s-4-4.5-4-8a4 4 0 0 1 4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>',
+        block:  '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9L8 3l6 6"/><rect x="5.5" y="9.5" width="5" height="5"/></svg>',
+        street: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="8" y1="1" x2="8" y2="15"/><line x1="4" y1="4" x2="12" y2="4"/><line x1="4" y1="12" x2="12" y2="12"/></svg>',
+    };
+    const GROUP_LABEL = { recent: 'Recent Searches', town: 'Towns', block: 'Blocks', street: 'Streets' };
+    const GROUP_ORDER = ['recent', 'town', 'block', 'street'];
+
+    /* ── Render ───────────────────────────────────────────── */
+    function show(data, q) {
         suggestions = data;
         activeIdx = -1;
         if (!data.length) { hide(); return; }
-        dropdown.innerHTML = data.map((s, i) =>
-            `<div class="ac-item" data-i="${i}">
-                <span class="ac-badge ${s.type}">${badgeLabel[s.type]}</span>
-                <div class="ac-text">
-                    <span class="ac-label">${s.label}</span>
-                    ${s.sublabel ? `<span class="ac-sub">${s.sublabel}</span>` : ''}
-                </div>
-            </div>`
-        ).join('') + '<div class="ac-tip">↑↓ to navigate &nbsp;·&nbsp; Enter to select</div>';
+
+        // Group results
+        const groups = {};
+        data.forEach(function(s, i) {
+            const g = s._recent ? 'recent' : s.type;
+            if (!groups[g]) groups[g] = [];
+            groups[g].push({idx: i, s: s});
+        });
+
+        let html = '';
+        GROUP_ORDER.forEach(function(g) {
+            if (!groups[g]) return;
+            html += '<div class="ac-group-header">' + GROUP_LABEL[g] + '</div>';
+            groups[g].forEach(function(item) {
+                const s = item.s, i = item.idx;
+                const iconType = s._recent ? 'recent' : s.type;
+                html += '<div class="ac-item" data-i="' + i + '">'
+                    + '<div class="ac-icon-wrap ' + iconType + '">' + (ICONS[iconType] || '') + '</div>'
+                    + '<div class="ac-text">'
+                    +   '<span class="ac-label">' + highlight(s.label, q) + '</span>'
+                    +   (s.sublabel ? '<span class="ac-sub">' + escHtml(s.sublabel) + '</span>' : '')
+                    + '</div>'
+                    + '<span class="ac-arrow">›</span>'
+                    + '</div>';
+            });
+        });
+        html += '<div class="ac-tip"><span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span><kbd>↵</kbd> Select</span><span><kbd>Esc</kbd> Close</span></div>';
+
+        dropdown.innerHTML = html;
         dropdown.style.display = 'block';
-        dropdown.querySelectorAll('.ac-item').forEach(el => {
-            el.addEventListener('mousedown', e => { e.preventDefault(); pick(+el.dataset.i); });
+        dropdown.querySelectorAll('.ac-item').forEach(function(el) {
+            el.addEventListener('mousedown', function(e) { e.preventDefault(); pick(+el.dataset.i); });
         });
     }
 
     function pick(i) {
         const s = suggestions[i];
+        saveRecent(s);
         if (s.type === 'town') {
             window.location.href = '/town/' + s.town.toLowerCase().replace(/ /g, '-').replace(/\//g, '-');
         } else if (s.type === 'block') {
@@ -177,9 +255,48 @@
 
     function hide() { dropdown.style.display = 'none'; activeIdx = -1; }
 
+    /* ── Input events ─────────────────────────────────────── */
+    function fetchSuggestions(q) {
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+            fetch('/autocomplete?q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(data) { show(data, q); });
+        }, 180);
+    }
+
+    input.addEventListener('input', function() {
+        clearTimeout(timer);
+        clearBtn.style.display = this.value ? 'flex' : 'none';
+        const q = this.value.trim();
+        if (!q) {
+            const recents = getRecents();
+            if (recents.length) show(recents, ''); else hide();
+            return;
+        }
+        if (q.length < 2) { hide(); return; }
+        fetchSuggestions(q);
+    });
+
+    input.addEventListener('focus', function() {
+        if (!this.value.trim()) {
+            const recents = getRecents();
+            if (recents.length) show(recents, '');
+        }
+    });
+
+    clearBtn.addEventListener('click', function() {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        input.focus();
+        const recents = getRecents();
+        if (recents.length) show(recents, ''); else hide();
+    });
+
+    /* ── Keyboard navigation ──────────────────────────────── */
     input.addEventListener('keydown', function(e) {
         const items = dropdown.querySelectorAll('.ac-item');
-        if (!items.length) return;
+        if (!items.length && e.key !== 'Escape') return;
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             activeIdx = Math.min(activeIdx + 1, items.length - 1);
@@ -190,18 +307,21 @@
             e.preventDefault(); pick(activeIdx); return;
         } else if (e.key === 'Escape') {
             hide(); return;
+        } else {
+            return;
         }
-        items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+        items.forEach(function(el, i) { el.classList.toggle('active', i === activeIdx); });
+        if (activeIdx >= 0) items[activeIdx].scrollIntoView({ block: 'nearest' });
     });
 
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.search-wrap')) hide();
     });
 
-    // Flat type pills
+    /* ── Flat type pills ──────────────────────────────────── */
     document.querySelectorAll('.pill').forEach(function(pill) {
         pill.addEventListener('click', function() {
-            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
             this.classList.add('active');
             document.getElementById('flat-type-val').value = this.dataset.val;
         });
