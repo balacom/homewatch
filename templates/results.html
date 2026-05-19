@@ -22,36 +22,42 @@
 
 {% block head %}
 <style>
-    .results-header { background: #0f172a; color: white; padding: 32px 20px; }
+    .results-header { background: linear-gradient(135deg, #060097 0%, #0b2447 100%); color: white; padding: 32px 20px; }
     .results-header h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
-    .results-header p { color: #64748b; font-size: 0.875rem; }
+    .results-header p { color: #a8c0db; font-size: 0.875rem; }
 
-    .refine { background: white; border-bottom: 1px solid #e2e8f0; padding: 14px 20px; }
+    .refine { background: white; border-bottom: 1px solid #e5e9f0; padding: 14px 20px; }
     .refine form { max-width: 1100px; margin: 0 auto; display: flex; gap: 8px; flex-wrap: wrap; }
-    .refine input, .refine select { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; color: #1e293b; min-width: 160px; flex: 1; }
-    .refine button { padding: 8px 20px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-    .refine button:hover { background: #1e3a5f; }
+    .refine input, .refine select {
+        padding: 8px 12px; border: 1px solid #e5e9f0; border-radius: 6px;
+        font-size: 0.875rem; color: #0b2447; min-width: 160px; flex: 1;
+        transition: border-color 0.15s;
+    }
+    .refine input:focus, .refine select:focus { outline: none; border-color: #1b5299; }
+    .refine button {
+        padding: 8px 20px; background: #1b5299; color: white;
+        border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 700; cursor: pointer;
+        transition: background 0.15s;
+    }
+    .refine button:hover { background: #0b2447; }
 
-    /* Chart */
-    .chart-wrap { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 20px 24px; margin-top: 24px; }
-    .chart-title { font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 16px; }
+    .chart-wrap { background: white; border-radius: 10px; border: 1px solid #e5e9f0; padding: 20px 24px; margin-top: 24px; }
+    .chart-title { font-size: 0.85rem; font-weight: 700; color: #0b2447; margin-bottom: 16px; }
     .chart-canvas-wrap { position: relative; height: 260px; }
 
-    /* Table */
     .table-wrap { overflow-x: auto; margin-top: 20px; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; font-size: 0.875rem; }
-    th { background: #0f172a; color: #94a3b8; padding: 12px 14px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; white-space: nowrap; }
-    td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; border: 1px solid #e5e9f0; font-size: 0.875rem; }
+    th { background: #0b2447; color: #a8c0db; padding: 12px 14px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; white-space: nowrap; }
+    td { padding: 11px 14px; border-bottom: 1px solid #f0f4fa; color: #1e3a5f; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f8fafc; }
-    .price { font-weight: 700; color: #0ea5e9; }
-    .tag { display: inline-block; background: #f1f5f9; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; color: #475569; }
+    tr:hover td { background: #f5f7fa; }
+    .price { font-weight: 700; color: #1b5299; }
+    .tag { display: inline-block; background: #eef2f9; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; color: #1b5299; font-weight: 600; }
 
-    .no-results { text-align: center; padding: 80px 20px; color: #94a3b8; }
-    .no-results h2 { font-size: 1.2rem; margin-bottom: 8px; color: #475569; }
-    .back-link { display: inline-block; margin-top: 16px; color: #0ea5e9; font-size: 0.875rem; }
+    .no-results { text-align: center; padding: 80px 20px; color: #7a93b8; }
+    .no-results h2 { font-size: 1.2rem; margin-bottom: 8px; color: #0b2447; }
+    .back-link { display: inline-block; margin-top: 16px; color: #1b5299; font-size: 0.875rem; }
 
-    /* ── Mobile responsive ───────────────────────────── */
     @media (max-width: 600px) {
         .results-header { padding: 20px 16px; }
         .results-header h1 { font-size: 1.2rem; }
@@ -84,7 +90,7 @@
         {% if street_param %}<input type="hidden" name="street" value="{{ street_param }}">{% endif %}
         {% if not block_param %}<input type="text" name="q" value="{{ query }}" placeholder="Block no. or street name" />{% endif %}
         {% if not block_param %}<input type="text" name="town" value="{{ town }}" placeholder="Town" />{% endif %}
-        {% if block_param %}<span style="padding:8px 12px;font-size:0.875rem;color:#475569;align-self:center;">{{ query }}</span>{% endif %}
+        {% if block_param %}<span style="padding:8px 12px;font-size:0.875rem;color:#4a6080;align-self:center;">{{ query }}</span>{% endif %}
         <select name="flat_type">
             <option value="">All flat types</option>
             <option value="2 ROOM" {% if flat_type == '2 ROOM' %}selected{% endif %}>2 Room</option>
@@ -110,15 +116,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>Month</th>
-                    <th>Block</th>
-                    <th>Street</th>
-                    <th>Town</th>
-                    <th>Flat Type</th>
-                    <th>Storey</th>
-                    <th>Area</th>
-                    <th>Lease Left</th>
-                    <th>Resale Price</th>
+                    <th>Month</th><th>Block</th><th>Street</th><th>Town</th>
+                    <th>Flat Type</th><th>Storey</th><th>Area</th><th>Lease Left</th><th>Resale Price</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,7 +126,7 @@
                     <td>{{ row.month }}</td>
                     <td><strong>{{ row.block }}</strong></td>
                     <td>{{ row.street_name | title }}</td>
-                    <td><a href="/town/{{ row.town | lower | replace(' ', '-') }}" style="color:#0ea5e9">{{ row.town | title }}</a></td>
+                    <td><a href="/town/{{ row.town | lower | replace(' ', '-') | replace('/', '-') }}" style="color:#1b5299">{{ row.town | title }}</a></td>
                     <td><span class="tag">{{ row.flat_type }}</span></td>
                     <td>{{ row.storey_range }}</td>
                     <td>{{ row.floor_area_sqm | int }} sqm</td>
@@ -142,70 +141,41 @@
 
 <script>
 (function() {
-    const COLORS = {
-        '2 ROOM':  '#f59e0b',
-        '3 ROOM':  '#10b981',
-        '4 ROOM':  '#3b82f6',
-        '5 ROOM':  '#8b5cf6',
-        'EXECUTIVE': '#ef4444',
-        'MULTI-GENERATION': '#ec4899',
-    };
+    const COLORS = {'2 ROOM':'#f59e0b','3 ROOM':'#10b981','4 ROOM':'#1b5299','5 ROOM':'#c10fff','EXECUTIVE':'#060097','MULTI-GENERATION':'#ec4899'};
     const params = new URLSearchParams({
-        block: '{{ block_param }}',
-        street: '{{ street_param }}',
-        town: '{{ town }}',
-        flat_type: '{{ flat_type }}'
+        block: '{{ block_param }}', street: '{{ street_param }}',
+        town: '{{ town }}', flat_type: '{{ flat_type }}'
     });
-    fetch('/api/trends?' + params.toString())
-        .then(r => r.json())
-        .then(function(data) {
-            if (!data || data.length < 2) return;
-            const years = [...new Set(data.map(d => d.year))].sort();
-            const flatTypes = [...new Set(data.map(d => d.flat_type))].sort();
-            const datasets = flatTypes.map(function(ft) {
-                const ftRows = data.filter(d => d.flat_type === ft);
-                return {
-                    label: ft.replace(' ROOM', 'R').replace('EXECUTIVE', 'Exec').replace('MULTI-GENERATION', 'Multi-Gen'),
-                    data: years.map(function(y) {
-                        const r = ftRows.find(d => d.year === y);
-                        return r ? Math.round(r.avg_price / 1000) : null;
-                    }),
-                    borderColor: COLORS[ft] || '#94a3b8',
-                    backgroundColor: (COLORS[ft] || '#94a3b8') + '18',
-                    tension: 0.35,
-                    spanGaps: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    borderWidth: 2,
-                    fill: false,
-                };
-            });
-            new Chart(document.getElementById('price-chart'), {
-                type: 'line',
-                data: { labels: years, datasets: datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) { return ctx.dataset.label + ': S$' + ctx.parsed.y + 'K'; }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            title: { display: true, text: 'Avg Price (S$K)', font: { size: 11 } },
-                            grid: { color: '#f1f5f9' },
-                            ticks: { callback: v => 'S$' + v + 'K' }
-                        },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
+    fetch('/api/trends?' + params.toString()).then(r => r.json()).then(function(data) {
+        if (!data || data.length < 2) return;
+        const years = [...new Set(data.map(d => d.year))].sort();
+        const flatTypes = [...new Set(data.map(d => d.flat_type))].sort();
+        const datasets = flatTypes.map(function(ft) {
+            const ftRows = data.filter(d => d.flat_type === ft);
+            return {
+                label: ft.replace(' ROOM','R').replace('EXECUTIVE','Exec').replace('MULTI-GENERATION','Multi-Gen'),
+                data: years.map(function(y) { const r = ftRows.find(d => d.year === y); return r ? Math.round(r.avg_price/1000) : null; }),
+                borderColor: COLORS[ft] || '#7a93b8',
+                backgroundColor: (COLORS[ft] || '#7a93b8') + '18',
+                tension: 0.35, spanGaps: true, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false,
+            };
         });
+        new Chart(document.getElementById('price-chart'), {
+            type: 'line', data: { labels: years, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
+                    tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': S$' + ctx.parsed.y + 'K'; } } }
+                },
+                scales: {
+                    y: { title: { display: true, text: 'Avg Price (S$K)', font: { size: 11 } }, grid: { color: '#f0f4fa' }, ticks: { callback: v => 'S$' + v + 'K' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
 })();
 </script>
 {% else %}

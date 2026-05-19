@@ -6,40 +6,65 @@
 
 {% block head %}
 <style>
-    /* Hero */
-    .hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: white; padding: 72px 20px 56px; text-align: center; }
+    /* Hero — navy-to-indigo gradient */
+    .hero {
+        background: linear-gradient(135deg, #060097 0%, #0b2447 50%, #1b5299 100%);
+        color: white;
+        padding: 72px 20px 60px;
+        text-align: center;
+    }
     .hero h1 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
-    .hero-sub { color: #94a3b8; font-size: 1rem; margin-bottom: 36px; }
+    .hero-sub { color: #a8c0db; font-size: 1rem; margin-bottom: 36px; }
 
     /* Stats */
     .stats { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; margin-bottom: 40px; }
     .stat-item { text-align: center; }
-    .stat-num { font-size: 2rem; font-weight: 800; color: #38bdf8; display: block; }
-    .stat-label { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #c10fff; display: block; }
+    .stat-label { font-size: 0.72rem; color: #a8c0db; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Search */
     .search-wrap { max-width: 640px; margin: 0 auto; position: relative; }
-    .search-field { display: flex; align-items: center; background: white; border-radius: 12px; padding: 6px 6px 6px 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-    .search-field svg.search-icon { color: #94a3b8; flex-shrink: 0; margin-right: 10px; }
-    .search-field input { flex: 1; border: none; outline: none; font-size: 1rem; color: #1e293b; background: transparent; padding: 10px 0; min-width: 0; }
-    .search-field input::placeholder { color: #94a3b8; }
-    .search-clear { display: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; border: none; cursor: pointer; color: #64748b; font-size: 14px; margin-right: 6px; flex-shrink: 0; line-height: 1; transition: background 0.15s, color 0.15s; }
-    .search-clear:hover { background: #cbd5e1; color: #1e293b; }
-    .search-btn { display: flex; align-items: center; gap: 6px; flex-shrink: 0; background: #0f172a; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
-    .search-btn:hover { background: #1e3a5f; }
+    .search-field {
+        display: flex; align-items: center;
+        background: white; border-radius: 12px;
+        padding: 6px 6px 6px 18px;
+        box-shadow: 0 8px 32px rgba(6,0,151,0.25);
+    }
+    .search-field svg.search-icon { color: #7a93b8; flex-shrink: 0; margin-right: 10px; }
+    .search-field input { flex: 1; border: none; outline: none; font-size: 1rem; color: #0b2447; background: transparent; padding: 10px 0; min-width: 0; }
+    .search-field input::placeholder { color: #7a93b8; }
+    .search-clear {
+        display: none; align-items: center; justify-content: center;
+        width: 28px; height: 28px; border-radius: 50%;
+        background: #e5e9f0; border: none; cursor: pointer;
+        color: #4a6080; font-size: 14px; margin-right: 6px; flex-shrink: 0;
+        line-height: 1; transition: background 0.15s, color 0.15s;
+    }
+    .search-clear:hover { background: #c7d3e5; color: #0b2447; }
+    .search-btn {
+        display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+        background: #1b5299; color: white; border: none; border-radius: 8px;
+        padding: 10px 24px; font-size: 0.95rem; font-weight: 700;
+        cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .search-btn:hover { background: #0b2447; }
     .search-btn-icon { display: none; }
 
     /* Flat type pills */
     .type-pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center; }
-    .pill { background: rgba(255,255,255,0.1); color: #94a3b8; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 14px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
-    .pill:hover { background: rgba(255,255,255,0.2); color: white; }
-    .pill.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; font-weight: 600; }
+    .pill {
+        background: rgba(255,255,255,0.12); color: #a8c0db;
+        border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
+        padding: 5px 14px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+    }
+    .pill:hover { background: rgba(255,255,255,0.22); color: white; }
+    .pill.active { background: #c10fff; color: white; border-color: #c10fff; font-weight: 600; }
 
     /* Autocomplete dropdown */
     .ac-dropdown {
         position: absolute; top: calc(100% + 8px); left: 0; right: 0;
         background: white; border-radius: 12px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.18); border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 40px rgba(6,0,151,0.15); border: 1px solid #e5e9f0;
         z-index: 200; display: none; overflow: hidden;
         animation: acFadeIn 0.12s ease;
     }
@@ -47,40 +72,43 @@
     .ac-group-header {
         padding: 8px 16px 4px;
         font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-        letter-spacing: 0.6px; color: #94a3b8;
-        border-top: 1px solid #f1f5f9;
+        letter-spacing: 0.6px; color: #7a93b8;
+        border-top: 1px solid #f0f4fa;
     }
     .ac-group-header:first-child { border-top: none; }
     .ac-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 14px; cursor: pointer; transition: background 0.1s; }
-    .ac-item:hover, .ac-item.active { background: #f8fafc; }
-    .ac-item.active { background: #f1f5f9; }
+    .ac-item:hover, .ac-item.active { background: #f5f7fa; }
+    .ac-item.active { background: #eef2f9; }
     .ac-icon-wrap {
         width: 30px; height: 30px; border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .ac-icon-wrap.town  { background: #dbeafe; color: #1d4ed8; }
-    .ac-icon-wrap.street { background: #dcfce7; color: #15803d; }
-    .ac-icon-wrap.block { background: #fef3c7; color: #b45309; }
-    .ac-icon-wrap.recent { background: #f1f5f9; color: #64748b; }
+    .ac-icon-wrap.town   { background: #e8ecf8; color: #060097; }
+    .ac-icon-wrap.street { background: #e8f5e9; color: #1b7a2f; }
+    .ac-icon-wrap.block  { background: #fef3c7; color: #b45309; }
+    .ac-icon-wrap.recent { background: #f0f4fa; color: #4a6080; }
     .ac-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-    .ac-label { font-size: 0.9rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ac-label b { font-weight: 700; color: #0f172a; }
-    .ac-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 1px; }
-    .ac-arrow { color: #cbd5e1; font-size: 12px; flex-shrink: 0; }
-    .ac-tip { padding: 7px 16px; font-size: 0.72rem; color: #94a3b8; border-top: 1px solid #f1f5f9; display: flex; gap: 12px; }
-    .ac-tip kbd { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; padding: 0 4px; font-size: 0.7rem; font-family: inherit; }
+    .ac-label { font-size: 0.9rem; color: #0b2447; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ac-label b { font-weight: 700; color: #060097; }
+    .ac-sub { font-size: 0.75rem; color: #7a93b8; margin-top: 1px; }
+    .ac-arrow { color: #c7d3e5; font-size: 12px; flex-shrink: 0; }
+    .ac-tip { padding: 7px 16px; font-size: 0.72rem; color: #7a93b8; border-top: 1px solid #f0f4fa; display: flex; gap: 12px; }
+    .ac-tip kbd { background: #f0f4fa; border: 1px solid #e5e9f0; border-radius: 3px; padding: 0 4px; font-size: 0.7rem; font-family: inherit; }
 
     /* Towns section */
     .towns-section { padding: 48px 0 60px; }
-    .section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
-    .section-sub { color: #64748b; font-size: 0.875rem; margin-bottom: 24px; }
+    .section-title { font-size: 1.2rem; font-weight: 800; color: #0b2447; margin-bottom: 4px; }
+    .section-sub { color: #4a6080; font-size: 0.875rem; margin-bottom: 24px; }
     .town-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-    .town-card { background: white; border-radius: 10px; padding: 16px 18px; border: 1px solid #e2e8f0; cursor: pointer; transition: box-shadow 0.15s, border-color 0.15s; }
-    .town-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-color: #38bdf8; }
-    .town-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
-    .town-meta span { display: block; font-size: 0.75rem; color: #64748b; }
-    .town-price { font-size: 0.85rem; font-weight: 600; color: #0ea5e9; margin-top: 6px; }
+    .town-card {
+        background: white; border-radius: 10px; padding: 16px 18px;
+        border: 1px solid #e5e9f0; cursor: pointer;
+        transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .town-card:hover { box-shadow: 0 4px 20px rgba(6,0,151,0.1); border-color: #1b5299; transform: translateY(-1px); }
+    .town-name { font-weight: 700; font-size: 0.9rem; color: #0b2447; margin-bottom: 8px; }
+    .town-meta span { display: block; font-size: 0.75rem; color: #4a6080; }
+    .town-price { font-size: 0.85rem; font-weight: 700; color: #1b5299; margin-top: 6px; }
 
     /* ── Mobile responsive ───────────────────────────── */
     @media (max-width: 600px) {
@@ -88,22 +116,17 @@
         .hero-sub { font-size: 0.875rem; margin-bottom: 24px; }
         .stats { gap: 24px; margin-bottom: 28px; }
         .stat-num { font-size: 1.6rem; }
-
-        /* Icon-only search button on small screens */
         .search-field { padding: 5px 5px 5px 14px; border-radius: 10px; }
         .search-btn { padding: 10px 12px; border-radius: 8px; }
         .search-btn-text { display: none; }
         .search-btn-icon { display: block; }
-
         .type-pills { gap: 6px; margin-top: 10px; }
         .pill { padding: 4px 10px; font-size: 0.75rem; }
-
         .ac-dropdown { border-radius: 8px; }
         .ac-group-header { padding: 6px 12px 3px; }
         .ac-item { padding: 8px 12px 8px 10px; gap: 8px; }
         .ac-icon-wrap { width: 26px; height: 26px; border-radius: 6px; }
         .ac-tip { display: none; }
-
         .towns-section { padding: 32px 0 40px; }
         .town-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
         .town-card { padding: 12px 14px; }
@@ -196,7 +219,6 @@
     const clearBtn = document.getElementById('search-clear');
     let timer, suggestions = [], activeIdx = -1;
 
-    /* ── Recent searches (localStorage) ─────────────────── */
     const RECENT_KEY = 'hw_recents_v1';
     const MAX_RECENTS = 5;
 
@@ -206,26 +228,20 @@
         list = list.slice(0, MAX_RECENTS);
         try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(e) {}
     }
-
     function getRecents() {
         try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) { return []; }
     }
-
-    /* ── Text helpers ─────────────────────────────────────── */
     function escHtml(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-
     function highlight(text, q) {
         const safe = escHtml(text);
         if (!q) return safe;
-        const lo = safe.toLowerCase(), ql = q.toLowerCase();
-        const idx = lo.indexOf(ql);
+        const idx = safe.toLowerCase().indexOf(q.toLowerCase());
         if (idx < 0) return safe;
         return safe.slice(0, idx) + '<b>' + safe.slice(idx, idx + q.length) + '</b>' + safe.slice(idx + q.length);
     }
 
-    /* ── SVG icons per type ──────────────────────────────── */
     const ICONS = {
         recent: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>',
         town:   '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2a4 4 0 0 1 4 4c0 3.5-4 8-4 8s-4-4.5-4-8a4 4 0 0 1 4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>',
@@ -235,62 +251,46 @@
     const GROUP_LABEL = { recent: 'Recent Searches', town: 'Towns', block: 'Blocks', street: 'Streets' };
     const GROUP_ORDER = ['recent', 'town', 'block', 'street'];
 
-    /* ── Render ───────────────────────────────────────────── */
     function show(data, q) {
-        suggestions = data;
-        activeIdx = -1;
+        suggestions = data; activeIdx = -1;
         if (!data.length) { hide(); return; }
-
         const groups = {};
         data.forEach(function(s, i) {
             const g = s._recent ? 'recent' : s.type;
             if (!groups[g]) groups[g] = [];
             groups[g].push({idx: i, s: s});
         });
-
         let html = '';
         GROUP_ORDER.forEach(function(g) {
             if (!groups[g]) return;
             html += '<div class="ac-group-header">' + GROUP_LABEL[g] + '</div>';
             groups[g].forEach(function(item) {
-                const s = item.s, i = item.idx;
-                const iconType = s._recent ? 'recent' : s.type;
+                const s = item.s, i = item.idx, it = s._recent ? 'recent' : s.type;
                 html += '<div class="ac-item" data-i="' + i + '">'
-                    + '<div class="ac-icon-wrap ' + iconType + '">' + (ICONS[iconType] || '') + '</div>'
-                    + '<div class="ac-text">'
-                    +   '<span class="ac-label">' + highlight(s.label, q) + '</span>'
-                    +   (s.sublabel ? '<span class="ac-sub">' + escHtml(s.sublabel) + '</span>' : '')
-                    + '</div>'
-                    + '<span class="ac-arrow">›</span>'
-                    + '</div>';
+                    + '<div class="ac-icon-wrap ' + it + '">' + (ICONS[it] || '') + '</div>'
+                    + '<div class="ac-text"><span class="ac-label">' + highlight(s.label, q) + '</span>'
+                    + (s.sublabel ? '<span class="ac-sub">' + escHtml(s.sublabel) + '</span>' : '')
+                    + '</div><span class="ac-arrow">›</span></div>';
             });
         });
         html += '<div class="ac-tip"><span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span><kbd>↵</kbd> Select</span><span><kbd>Esc</kbd> Close</span></div>';
-
         dropdown.innerHTML = html;
         dropdown.style.display = 'block';
         dropdown.querySelectorAll('.ac-item').forEach(function(el) {
             el.addEventListener('mousedown', function(e) { e.preventDefault(); pick(+el.dataset.i); });
         });
     }
-
     function pick(i) {
         const s = suggestions[i];
         saveRecent(s);
         if (s.type === 'town') {
-            window.location.href = '/town/' + s.town.toLowerCase().replace(/ /g, '-').replace(/\//g, '-');
+            window.location.href = '/town/' + s.town.toLowerCase().replace(/ /g,'-').replace(/\//g,'-');
         } else if (s.type === 'block') {
-            window.location.href = '/block/' + encodeURIComponent(s.block) + '/' + s.street.toLowerCase().replace(/ /g, '-');
-        } else {
-            input.value = s.label;
-            hide();
-            form.submit();
-        }
+            window.location.href = '/block/' + encodeURIComponent(s.block) + '/' + s.street.toLowerCase().replace(/ /g,'-');
+        } else { input.value = s.label; hide(); form.submit(); }
     }
-
     function hide() { dropdown.style.display = 'none'; activeIdx = -1; }
 
-    /* ── Input events ─────────────────────────────────────── */
     function fetchSuggestions(q) {
         clearTimeout(timer);
         timer = setTimeout(function() {
@@ -299,64 +299,36 @@
                 .then(function(data) { show(data, q); });
         }, 180);
     }
-
     input.addEventListener('input', function() {
         clearTimeout(timer);
         clearBtn.style.display = this.value ? 'flex' : 'none';
         const q = this.value.trim();
-        if (!q) {
-            const recents = getRecents();
-            if (recents.length) show(recents, ''); else hide();
-            return;
-        }
+        if (!q) { const r = getRecents(); if (r.length) show(r, ''); else hide(); return; }
         if (q.length < 2) { hide(); return; }
         fetchSuggestions(q);
     });
-
     input.addEventListener('focus', function() {
-        if (!this.value.trim()) {
-            const recents = getRecents();
-            if (recents.length) show(recents, '');
-        }
+        if (!this.value.trim()) { const r = getRecents(); if (r.length) show(r, ''); }
     });
-
     clearBtn.addEventListener('click', function() {
-        input.value = '';
-        clearBtn.style.display = 'none';
-        input.focus();
-        const recents = getRecents();
-        if (recents.length) show(recents, ''); else hide();
+        input.value = ''; clearBtn.style.display = 'none'; input.focus();
+        const r = getRecents(); if (r.length) show(r, ''); else hide();
     });
-
-    /* ── Keyboard navigation ──────────────────────────────── */
     input.addEventListener('keydown', function(e) {
         const items = dropdown.querySelectorAll('.ac-item');
         if (!items.length && e.key !== 'Escape') return;
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            activeIdx = Math.min(activeIdx + 1, items.length - 1);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            activeIdx = Math.max(activeIdx - 1, -1);
-        } else if (e.key === 'Enter' && activeIdx >= 0) {
-            e.preventDefault(); pick(activeIdx); return;
-        } else if (e.key === 'Escape') {
-            hide(); return;
-        } else {
-            return;
-        }
-        items.forEach(function(el, i) { el.classList.toggle('active', i === activeIdx); });
-        if (activeIdx >= 0) items[activeIdx].scrollIntoView({ block: 'nearest' });
+        if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx+1, items.length-1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx-1, -1); }
+        else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); pick(activeIdx); return; }
+        else if (e.key === 'Escape') { hide(); return; }
+        else return;
+        items.forEach(function(el,i){ el.classList.toggle('active', i===activeIdx); });
+        if (activeIdx >= 0) items[activeIdx].scrollIntoView({block:'nearest'});
     });
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.search-wrap')) hide();
-    });
-
-    /* ── Flat type pills ──────────────────────────────────── */
+    document.addEventListener('click', function(e) { if (!e.target.closest('.search-wrap')) hide(); });
     document.querySelectorAll('.pill').forEach(function(pill) {
         pill.addEventListener('click', function() {
-            document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
+            document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
             this.classList.add('active');
             document.getElementById('flat-type-val').value = this.dataset.val;
         });
