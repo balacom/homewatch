@@ -572,8 +572,8 @@ def api_estimate():
             conn.close()
             return jsonify({
                 'estimate': estimate,
-                'low':      int(base_price),
-                'high':     int(base_price),
+                'low':      int(anchor['resale_price']),
+                'high':     int(anchor['resale_price']),
                 'count':    1,
                 'note':     note,
             })
