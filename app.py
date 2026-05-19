@@ -105,6 +105,16 @@ def index():
     total, blocks, towns, town_list = get_stats()
     return render_template('index.html', total=total, blocks=blocks, towns=towns, town_list=town_list)
 
+def _parse_block_street(q):
+    """Return (block_prefix, street_fragment) if q looks like 'number text', else None."""
+    # Strip optional leading BLK / BLOCK prefix
+    q = re.sub(r'^BLK\s+', '', q.strip())
+    q = re.sub(r'^BLOCK\s+', '', q)
+    m = re.match(r'^(\d+\w*)\s+(.+)$', q)
+    if m:
+        return m.group(1), m.group(2).strip()
+    return None
+
 @app.route('/autocomplete')
 def autocomplete():
     q = request.args.get('q', '').strip().upper()
@@ -118,13 +128,11 @@ def autocomplete():
         blk, street = resolve_postal(q)
         if blk and street:
             normalized = normalize_street(street)
-            # 1st try: exact normalized match
             row = conn.execute(
                 "SELECT town, street_name FROM transactions WHERE block = ? AND street_name = ? LIMIT 1",
                 (blk, normalized)
             ).fetchone()
             if not row:
-                # 2nd try: first word LIKE match
                 first_word = normalized.split()[0]
                 row = conn.execute(
                     "SELECT town, street_name FROM transactions WHERE block = ? AND street_name LIKE ? LIMIT 1",
@@ -139,8 +147,24 @@ def autocomplete():
                 'block': blk,
                 'street': exact_street,
             })
+    elif _parse_block_street(q):
+        # Combined "block street" query e.g. "627 Hougang Ave 8" or "Blk 22 Ang Mo Kio"
+        blk_prefix, street_frag = _parse_block_street(q)
+        for row in conn.execute(
+            """SELECT DISTINCT block, street_name, town
+               FROM transactions WHERE block LIKE ? AND street_name LIKE ?
+               ORDER BY block, street_name LIMIT 10""",
+            (f'{blk_prefix}%', f'%{street_frag}%')
+        ).fetchall():
+            results.append({
+                'type': 'block',
+                'label': f"Blk {row['block']} {row['street_name'].title()}",
+                'sublabel': row['town'].title(),
+                'block': row['block'],
+                'street': row['street_name'],
+            })
     elif re.match(r'^\d', q):
-        # Block number search — return block + street combinations
+        # Block number only
         for row in conn.execute(
             """SELECT DISTINCT block, street_name, town
                FROM transactions WHERE block LIKE ?
@@ -204,6 +228,26 @@ def search():
             count_sql += " AND block = ? AND street_name LIKE ?"
             params += [blk, f'%{st.upper()}%']
             display_q = f"Blk {blk} {st.title()}"
+    elif q and _parse_block_street(q.upper()):
+        # Combined "block street" query e.g. "627 Hougang Ave 8"
+        blk_prefix, street_frag = _parse_block_street(q.upper())
+        matches = conn.execute(
+            """SELECT DISTINCT block, street_name FROM transactions
+               WHERE block LIKE ? AND street_name LIKE ?
+               ORDER BY block, street_name LIMIT 2""",
+            (f'{blk_prefix}%', f'%{street_frag}%')
+        ).fetchall()
+        if len(matches) == 1:
+            # Unique match — redirect straight to block page
+            from flask import redirect
+            conn.close()
+            slug = matches[0]['street_name'].lower().replace(' ', '-')
+            return redirect(f'/block/{matches[0]["block"]}/{slug}')
+        else:
+            sql += " AND block LIKE ? AND street_name LIKE ?"
+            count_sql += " AND block LIKE ? AND street_name LIKE ?"
+            params += [f'{blk_prefix}%', f'%{street_frag}%']
+            display_q = q
     elif q:
         q_upper = q.upper()
         sql += " AND (block LIKE ? OR street_name LIKE ?)"
