@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ town | title }} HDB Resale Prices — HomeWatch SG{% endblock %}
+{% block description %}HDB resale prices in {{ town | title }}, Singapore. {{ "{:,}".format(total_blocks) }} blocks, {{ "{:,}".format(total_txns) }} transactions{% if town_median %}, median S${{ "{:,}".format(town_median) }}{% endif %}. Updated monthly.{% endblock %}
+{% block og_title %}{{ town | title }} HDB Prices | HomeWatch SG{% endblock %}
+{% block canonical %}https://homewatch.sg/town/{{ town_slug }}{% endblock %}
+
+{% block head %}
+<style>
+    /* Breadcrumb */
+    .breadcrumb { background: #0b2447; padding: 10px 20px; font-size: 0.78rem; color: #4a6080; }
+    .breadcrumb a { color: #7a93b8; } .breadcrumb a:hover { color: #a8c0db; }
+    .breadcrumb span { margin: 0 6px; color: #1b5299; }
+
+    /* Hero */
+    .town-hero { background: linear-gradient(135deg, #060097 0%, #0b2447 100%); color: white; padding: 32px 20px 28px; }
+    .town-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin-bottom: 18px; }
+    .town-summary { display: flex; gap: 32px; flex-wrap: wrap; }
+    .ts-item { text-align: left; }
+    .ts-num { display: block; font-size: 1.4rem; font-weight: 800; color: #c10fff; }
+    .ts-lbl { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #a8c0db; }
+
+    /* Main content */
+    .town-body { padding: 24px 0 60px; }
+
+    /* Street section */
+    .street-section { background: white; border: 1px solid #e5e9f0; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+    .street-section[open] .street-chevron { transform: rotate(180deg); }
+    .street-header {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 18px; cursor: pointer; list-style: none;
+        user-select: none;
+        transition: background 0.15s;
+    }
+    .street-header:hover { background: #f5f7fa; }
+    .street-header::-webkit-details-marker { display: none; }
+    .street-name { font-weight: 700; font-size: 0.95rem; color: #0b2447; flex: 1; }
+    .street-meta { display: flex; gap: 16px; font-size: 0.78rem; color: #4a6080; flex-shrink: 0; flex-wrap: wrap; }
+    .street-meta .s-median { font-weight: 700; color: #1b5299; }
+    .street-chevron { color: #7a93b8; font-size: 0.8rem; flex-shrink: 0; transition: transform 0.2s; }
+
+    /* Block grid inside each street */
+    .block-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+        padding: 4px 14px 14px;
+    }
+    .block-card {
+        background: #f5f7fa; border: 1px solid #e5e9f0; border-radius: 8px;
+        padding: 10px 12px; text-decoration: none;
+        transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
+        display: block;
+    }
+    .block-card:hover { background: white; border-color: #1b5299; box-shadow: 0 2px 10px rgba(6,0,151,0.1); }
+    .blk-num { font-size: 0.8rem; font-weight: 700; color: #0b2447; margin-bottom: 3px; }
+    .blk-price { font-size: 0.88rem; font-weight: 800; color: #1b5299; margin-bottom: 2px; }
+    .blk-trend { font-size: 0.72rem; font-weight: 600; }
+    .trend-up   { color: #10b981; }
+    .trend-down { color: #ef4444; }
+    .trend-na   { color: #94a3b8; }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+        .town-hero { padding: 20px 16px; }
+        .town-summary { gap: 20px; }
+        .ts-num { font-size: 1.1rem; }
+        .street-header { padding: 12px 14px; flex-wrap: wrap; gap: 6px; }
+        .street-meta { gap: 10px; font-size: 0.73rem; }
+        .block-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 4px 10px 10px; }
+        .block-card { padding: 8px 10px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <div class="container">
+        <a href="/">Home</a><span>›</span>{{ town | title }}
+    </div>
+</div>
+
+<div class="town-hero">
+    <div class="container">
+        <h1>{{ town | title }}</h1>
+        <div class="town-summary">
+            <div class="ts-item">
+                <span class="ts-num">{{ "{:,}".format(total_blocks) }}</span>
+                <span class="ts-lbl">Blocks</span>
+            </div>
+            <div class="ts-item">
+                <span class="ts-num">{{ "{:,}".format(total_txns) }}</span>
+                <span class="ts-lbl">Transactions</span>
+            </div>
+            <div class="ts-item">
+                <span class="ts-num">{% if town_median %}S${{ "{:,}".format(town_median) }}{% else %}—{% endif %}</span>
+                <span class="ts-lbl">Median Price</span>
+            </div>
+            <div class="ts-item">
+                <span class="ts-num">{{ streets | length }}</span>
+                <span class="ts-lbl">Streets</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container town-body">
+    {% for street in streets %}
+    <details class="street-section" open>
+        <summary class="street-header">
+            <span class="street-name">{{ street.name }}</span>
+            <span class="street-meta">
+                <span>{{ street.block_count }} block{{ 's' if street.block_count != 1 }}</span>
+                <span>{{ "{:,}".format(street.tx_count) }} txns</span>
+                <span class="s-median">Median S${{ "{:,}".format(street.median_price) }}</span>
+            </span>
+            <span class="street-chevron">▾</span>
+        </summary>
+        <div class="block-grid">
+            {% for blk in street.blocks %}
+            <a href="/block/{{ blk.block }}/{{ street.slug }}" class="block-card">
+                <div class="blk-num">Blk {{ blk.block }}</div>
+                <div class="blk-price">S${{ "{:,.0f}".format(blk.median_price) }}</div>
+                {% if blk.trend_5y is not none %}
+                <div class="blk-trend {% if blk.trend_5y >= 0 %}trend-up{% else %}trend-down{% endif %}">
+                    {{ '▲' if blk.trend_5y >= 0 else '▼' }} {{ blk.trend_5y | abs }}%
+                </div>
+                {% else %}
+                <div class="blk-trend trend-na">— no trend</div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </details>
+    {% endfor %}
+</div>
+{% endblock %}

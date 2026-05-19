@@ -274,24 +274,84 @@ def search():
 
 @app.route('/town/<town_name>')
 def town(town_name):
+    from datetime import datetime
+    from statistics import median as stat_median
+    from collections import defaultdict
+
     conn = get_db()
-    # Resolve slug → actual DB town name so KALLANG/WHAMPOA (slug: kallang-whampoa) works
     town_row = conn.execute("""
         SELECT DISTINCT town FROM transactions
         WHERE LOWER(REPLACE(REPLACE(town,' ','-'),'/','-')) = ?
         LIMIT 1
     """, (town_name.lower(),)).fetchone()
-    town_upper = town_row['town'] if town_row else town_name.upper().replace('-', ' ')
-    rows = conn.execute(
-        "SELECT * FROM transactions WHERE town = ? ORDER BY month DESC LIMIT 200",
+    if not town_row:
+        conn.close()
+        from flask import abort
+        abort(404)
+    town_upper = town_row['town']
+
+    now = datetime.now()
+    recent_cutoff = f"{now.year - 2:04d}-{now.month:02d}"
+    old_start     = f"{now.year - 6:04d}-{now.month:02d}"
+    old_end       = f"{now.year - 4:04d}-{now.month:02d}"
+
+    all_txns = conn.execute(
+        "SELECT block, street_name, resale_price, month FROM transactions WHERE town = ? ORDER BY street_name, block",
         (town_upper,)
     ).fetchall()
-    count = conn.execute("SELECT COUNT(*) FROM transactions WHERE town = ?", (town_upper,)).fetchone()[0]
-    avg = conn.execute("SELECT CAST(AVG(resale_price) AS INTEGER) FROM transactions WHERE town = ?", (town_upper,)).fetchone()[0]
     conn.close()
-    return render_template('results.html', rows=rows, query='', town=town_upper,
-                           flat_type='', count=count, avg=avg,
-                           block_param='', street_param='')
+
+    # Group transactions by (block, street)
+    block_map = defaultdict(list)
+    for row in all_txns:
+        block_map[(row['block'], row['street_name'])].append((row['month'], row['resale_price']))
+
+    streets_map = defaultdict(list)
+    all_town_prices = []
+
+    def _num_sort(b):
+        m = re.match(r'^(\d+)', b['block'])
+        return (int(m.group(1)) if m else 0, b['block'])
+
+    for (blk, street), txns in sorted(block_map.items()):
+        prices_all    = [p for _, p in txns]
+        prices_recent = [p for mo, p in txns if mo >= recent_cutoff]
+        prices_old    = [p for mo, p in txns if old_start <= mo <= old_end]
+
+        med_recent = int(stat_median(prices_recent)) if prices_recent else int(stat_median(prices_all))
+        med_old    = int(stat_median(prices_old))    if prices_old    else None
+        trend      = round((med_recent - med_old) / med_old * 100, 1) if med_old else None
+
+        all_town_prices.extend(prices_recent or prices_all)
+
+        streets_map[street].append({
+            'block':        blk,
+            'tx_count':     len(txns),
+            'median_price': med_recent,
+            'trend_5y':     trend,
+        })
+
+    streets = []
+    for street, blocks in sorted(streets_map.items()):
+        blocks_sorted = sorted(blocks, key=_num_sort)
+        street_prices = [b['median_price'] for b in blocks_sorted]
+        streets.append({
+            'name':        street.title(),
+            'slug':        street.lower().replace(' ', '-'),
+            'block_count': len(blocks_sorted),
+            'tx_count':    sum(b['tx_count'] for b in blocks_sorted),
+            'median_price': int(stat_median(street_prices)),
+            'blocks':      blocks_sorted,
+        })
+
+    total_blocks = sum(s['block_count'] for s in streets)
+    total_txns   = sum(s['tx_count']    for s in streets)
+    town_median  = int(stat_median(all_town_prices)) if all_town_prices else None
+
+    return render_template('town.html',
+        town=town_upper, town_slug=town_name,
+        streets=streets, total_blocks=total_blocks,
+        total_txns=total_txns, town_median=town_median)
 
 @app.route('/block/<block_no>/<street_slug>')
 def block_page(block_no, street_slug):
