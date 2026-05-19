@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HomeWatch SG{% endblock %}</title>
+    {% set _desc %}{% block description %}HDB resale price lookup for every Singapore block. Search 351,000+ transactions since 2017. Updated monthly from data.gov.sg.{% endblock %}{% endset %}
+    {% set _title %}{% block og_title %}HomeWatch SG — HDB Resale Prices for Every Singapore Block{% endblock %}{% endset %}
+    {% set _url %}{% block canonical %}https://homewatch.sg{% endblock %}{% endset %}
+    <meta name="description" content="{{ _desc }}">
+    <link rel="canonical" href="{{ _url }}">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HomeWatch SG">
+    <meta property="og:title" content="{{ _title }}">
+    <meta property="og:description" content="{{ _desc }}">
+    <meta property="og:url" content="{{ _url }}">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ _title }}">
+    <meta name="twitter:description" content="{{ _desc }}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+        a { color: inherit; text-decoration: none; }
+
+        /* Nav */
+        nav { background: #0f172a; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .nav-brand { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+        .nav-brand span { color: #38bdf8; }
+        .nav-links { display: flex; gap: 24px; font-size: 0.875rem; color: #94a3b8; }
+        .nav-links a:hover { color: white; }
+
+        /* Container */
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        /* Footer */
+        footer { background: #0f172a; color: #64748b; text-align: center; padding: 32px 20px; font-size: 0.8rem; margin-top: 60px; }
+        footer a { color: #94a3b8; }
+        footer a:hover { color: white; }
+    </style>
+    {% block head %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="nav-brand">Home<span>Watch</span> SG</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/search">Search</a>
+        </div>
+    </nav>
+    {% block content %}{% endblock %}
+    <footer>
+        <div>Data sourced from <a href="https://data.gov.sg" target="_blank">data.gov.sg</a> &bull; Updated monthly &bull; &copy; 2025 HomeWatch SG</div>
+    </footer>
+</body>
+</html>

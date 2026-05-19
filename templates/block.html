@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% block title %}Blk {{ block }} {{ street | title }} HDB Resale Prices — HomeWatch SG{% endblock %}
+{% block description %}HDB resale prices for Blk {{ block }} {{ street | title }}, {{ town | title }}. {{ count }} transactions since 2017{% if latest %}, latest sale S${{ "{:,}".format(latest.resale_price | int) }} ({{ latest.month }}){% endif %}. Built {{ lease_year }}, {{ lease_remaining }} years lease remaining.{% endblock %}
+{% block og_title %}Blk {{ block }} {{ street | title }} HDB Prices | HomeWatch SG{% endblock %}
+{% block canonical %}https://homewatch.sg/block/{{ block }}/{{ street | lower | replace(' ', '-') }}{% endblock %}
+
+{% block head %}
+<style>
+    /* Breadcrumb */
+    .breadcrumb { background: #0f172a; padding: 10px 20px; font-size: 0.78rem; color: #475569; }
+    .breadcrumb a { color: #64748b; } .breadcrumb a:hover { color: #94a3b8; }
+    .breadcrumb span { margin: 0 6px; }
+
+    /* Hero */
+    .block-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: white; padding: 32px 20px 28px; }
+    .block-hero h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; margin-bottom: 10px; }
+    .block-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; font-size: 0.82rem; color: #94a3b8; }
+    .meta-dot { color: #334155; }
+    .lease-chip { padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .lease-ok { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .lease-warn { background: rgba(245,158,11,0.2); color: #fcd34d; }
+    .mop-chip { background: rgba(56,189,248,0.15); color: #7dd3fc; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .flat-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .flat-chip { background: rgba(255,255,255,0.12); color: #e2e8f0; border-radius: 6px; padding: 4px 12px; font-size: 0.8rem; font-weight: 600; }
+
+    /* Stats cards */
+    .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 24px 0 0; }
+    .stat-card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px 18px; }
+    .stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 600; margin-bottom: 6px; }
+    .stat-val { font-size: 1.4rem; font-weight: 800; color: #0f172a; line-height: 1.1; }
+    .stat-sub { font-size: 0.72rem; color: #64748b; margin-top: 4px; }
+    .up { color: #10b981; } .down { color: #ef4444; }
+
+    /* Section wrapper */
+    .section { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 20px 24px; margin-top: 16px; }
+    .section-heading { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+
+    /* Town rankings */
+    .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .rank-card { background: #f8fafc; border-radius: 8px; padding: 14px 16px; border: 1px solid #f1f5f9; }
+    .rank-metric { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; }
+    .rank-pct { font-size: 1.3rem; font-weight: 800; color: #0f172a; }
+    .rank-detail { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
+    .rank-bar { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 8px; }
+    .rank-fill { height: 100%; background: #38bdf8; border-radius: 2px; }
+
+    /* Chart toggle buttons */
+    .chart-toggles { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .ct-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid #e2e8f0; background: white; font-size: 0.78rem; color: #475569; cursor: pointer; transition: all 0.15s; }
+    .ct-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+    .chart-canvas-wrap { position: relative; height: 250px; }
+
+    /* Estimator */
+    .est-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .est-row select { flex: 1; min-width: 150px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; color: #1e293b; }
+    .est-btn { padding: 9px 20px; background: #0f172a; color: white; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+    .est-result { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 18px; display: none; }
+    .est-value { font-size: 1.5rem; font-weight: 800; color: #15803d; }
+    .est-range { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+
+    /* Projector */
+    .proj-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .proj-factor { flex: 1; min-width: 140px; background: #f8fafc; border-radius: 8px; padding: 12px 16px; border: 1px solid #f1f5f9; }
+    .proj-factor-label { font-size: 0.72rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 4px; }
+    .proj-factor-val { font-size: 1.2rem; font-weight: 700; }
+    .proj-inputs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+    .proj-inputs label { font-size: 0.8rem; color: #475569; }
+    .proj-inputs select { padding: 7px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.85rem; }
+    .proj-output { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 18px; font-size: 0.9rem; color: #1e40af; display: none; }
+    .proj-val { font-size: 1.4rem; font-weight: 800; }
+    .disclaimer { font-size: 0.72rem; color: #94a3b8; margin-top: 8px; }
+
+    /* Lease decay */
+    .lease-bar-wrap { margin: 12px 0; }
+    .lease-bar-bg { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+    .lease-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
+    .lease-stats { display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748b; margin-top: 6px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 0 0 10px 10px; font-size: 0.875rem; }
+    th { background: #0f172a; color: #94a3b8; padding: 11px 14px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; white-space: nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .price { font-weight: 700; color: #0ea5e9; }
+    .psqm { font-size: 0.8rem; color: #94a3b8; }
+    .tag { display: inline-block; background: #f1f5f9; border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; color: #475569; }
+
+    /* About + FAQ */
+    .about-text { font-size: 0.9rem; color: #475569; line-height: 1.7; }
+    .faq-item { border-bottom: 1px solid #f1f5f9; padding: 14px 0; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-weight: 600; color: #1e293b; font-size: 0.9rem; margin-bottom: 6px; }
+    .faq-a { font-size: 0.875rem; color: #64748b; line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <div class="container">
+        <a href="/">Home</a><span>›</span>
+        <a href="/town/{{ town | lower | replace(' ', '-') | replace('/', '-') }}">{{ town | title }}</a><span>›</span>
+        Blk {{ block }} {{ street | title }}
+    </div>
+</div>
+
+<!-- Hero -->
+<div class="block-hero">
+    <div class="container">
+        <h1>Block {{ block }} {{ street | title }}</h1>
+        <div class="block-meta">
+            <span>{{ town | title }}</span>
+            {% if lease_year %}<span class="meta-dot">·</span><span>Built {{ lease_year }}</span>{% endif %}
+            {% if lease_remaining is not none %}
+            <span class="meta-dot">·</span>
+            <span class="lease-chip {% if lease_remaining >= 60 %}lease-ok{% else %}lease-warn{% endif %}">{{ lease_remaining }} yrs lease</span>
+            {% endif %}
+            {% if mop_cleared %}<span class="mop-chip">MOP Cleared</span>{% endif %}
+        </div>
+        <div class="flat-chips">
+            {% for ft in flat_types %}<span class="flat-chip">{{ ft }}</span>{% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-bottom:48px;">
+
+    <!-- Stats cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-label">Latest Sale</div>
+            {% if latest %}
+            <div class="stat-val">S${{ "{:,.0f}".format(latest.resale_price) }}</div>
+            <div class="stat-sub">{{ latest.flat_type }} · {{ latest.month }}</div>
+            {% else %}<div class="stat-val">—</div>{% endif %}
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Median $/sqm</div>
+            <div class="stat-val">{{ "S${:,}".format(median_psqm) if median_psqm else '—' }}</div>
+            <div class="stat-sub">Based on {{ count }} transactions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Transactions</div>
+            <div class="stat-val">{{ count }}</div>
+            <div class="stat-sub">Since Jan 2017</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">5-Year Trend</div>
+            {% if trend_5y is not none %}
+            <div class="stat-val {% if trend_5y >= 0 %}up{% else %}down{% endif %}">{{ '▲' if trend_5y >= 0 else '▼' }} {{ trend_5y | abs }}%</div>
+            <div class="stat-sub">Median price change</div>
+            {% else %}<div class="stat-val">—</div><div class="stat-sub">Insufficient data</div>{% endif %}
+        </div>
+    </div>
+
+    <!-- Town Rankings -->
+    {% if rankings %}
+    <div class="section">
+        <div class="section-heading">How This Block Ranks in {{ town | title }} ({{ rankings.total }} blocks)</div>
+        <div class="rank-grid">
+            <div class="rank-card">
+                <div class="rank-metric">Median Price</div>
+                <div class="rank-pct">Top {{ rankings.price_pct }}%</div>
+                <div class="rank-detail">#{{ rankings.price_rank }} of {{ rankings.total }}</div>
+                <div class="rank-bar"><div class="rank-fill" style="width:{{ 100 - rankings.price_pct }}%"></div></div>
+            </div>
+            <div class="rank-card">
+                <div class="rank-metric">Value $/sqm</div>
+                <div class="rank-pct">Top {{ rankings.psqm_pct }}%</div>
+                <div class="rank-detail">#{{ rankings.psqm_rank }} of {{ rankings.total }}</div>
+                <div class="rank-bar"><div class="rank-fill" style="width:{{ 100 - rankings.psqm_pct }}%"></div></div>
+            </div>
+            {% if rankings.growth_pct is not none %}
+            <div class="rank-card">
+                <div class="rank-metric">5-Year Growth</div>
+                <div class="rank-pct">Top {{ rankings.growth_pct }}%</div>
+                <div class="rank-detail">#{{ rankings.growth_rank }} of {{ rankings.growth_total }}</div>
+                <div class="rank-bar"><div class="rank-fill" style="width:{{ 100 - rankings.growth_pct }}%"></div></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Price Trend Chart -->
+    <div class="section">
+        <div class="section-heading">Price Trend</div>
+        <div class="chart-toggles" id="chart-toggles">
+            <button class="ct-btn active" data-ft="">All {{ count }}</button>
+            {% for ft in flat_types %}
+            <button class="ct-btn" data-ft="{{ ft }}">{{ ft.replace(' ROOM','R').replace('EXECUTIVE','Exec') }}</button>
+            {% endfor %}
+        </div>
+        <div class="chart-canvas-wrap"><canvas id="price-chart"></canvas></div>
+    </div>
+
+    <!-- Unit Estimator -->
+    <div class="section">
+        <div class="section-heading">What's Your Unit Worth?</div>
+        <p style="font-size:0.82rem;color:#64748b;margin-bottom:14px;">Select your floor and flat type to get an estimated market value based on recent transactions.</p>
+        <div class="est-row">
+            <select id="est-storey">
+                <option value="">Any floor</option>
+                {% for sb in storey_bands %}<option value="{{ sb }}">{{ sb }}</option>{% endfor %}
+            </select>
+            <select id="est-flattype">
+                <option value="">Select flat type</option>
+                {% for ft in flat_types %}<option value="{{ ft }}">{{ ft }}</option>{% endfor %}
+            </select>
+            <button class="est-btn" onclick="getEstimate()">Get Estimate</button>
+        </div>
+        <div class="est-result" id="est-result">
+            <div class="stat-label">Estimated Market Value</div>
+            <div class="est-value" id="est-value">—</div>
+            <div class="est-range" id="est-range"></div>
+        </div>
+        <p style="font-size:0.72rem;color:#94a3b8;margin-top:10px;">Based on median resale prices in {{ town | title }}. Methodology follows checkhowmuch.sg. Not financial advice.</p>
+    </div>
+
+    <!-- Future Value Projector -->
+    <div class="section">
+        <div class="section-heading">Future Value Projection</div>
+        <div class="proj-row">
+            <div class="proj-factor">
+                <div class="proj-factor-label">Market Appreciation</div>
+                <div class="proj-factor-val up">{% if appreciation_rate is not none %}+{{ appreciation_rate }}%/yr{% else %}—{% endif %}</div>
+            </div>
+            <div class="proj-factor">
+                <div class="proj-factor-label">Lease Decay</div>
+                <div class="proj-factor-val down">{% if lease_decay %}−{{ lease_decay }}%/yr{% else %}—{% endif %}</div>
+            </div>
+        </div>
+        <div class="proj-inputs">
+            <label>Growth assumption:</label>
+            <select id="proj-growth">
+                <option value="2">Conservative 2%</option>
+                <option value="3">Moderate 3%</option>
+                <option value="5" selected>Optimistic 5%</option>
+                {% if appreciation_rate is not none %}<option value="{{ appreciation_rate }}">This block {{ appreciation_rate }}%</option>{% endif %}
+            </select>
+            <label>Years:</label>
+            <select id="proj-years">
+                <option value="5">5 years</option>
+                <option value="10" selected>10 years</option>
+                <option value="15">15 years</option>
+                <option value="20">20 years</option>
+            </select>
+            <button class="est-btn" onclick="projectValue()">Calculate</button>
+        </div>
+        <div class="proj-output" id="proj-output">
+            <div class="stat-label">Projected Value in <span id="proj-yr-label"></span></div>
+            <div class="proj-val" id="proj-val"></div>
+            <div class="est-range" id="proj-detail"></div>
+        </div>
+        <p class="disclaimer">Projection: Vfuture = Vnow × (1 + growth)^years × Bala(T−years) / Bala(T). Assumes 99-year leasehold. Not financial advice.</p>
+    </div>
+
+    <!-- Lease Decay -->
+    {% if lease_remaining is not none %}
+    <div class="section">
+        <div class="section-heading">Lease Status</div>
+        <div style="font-size:0.9rem;color:#475569;margin-bottom:10px;">
+            <strong>{{ lease_remaining }} years {{ ((lease_remaining / 99) * 100) | int }}%</strong> of original 99-year lease remaining.
+            {% if lease_remaining < 40 %}
+            Lease below 40 years — significant impact on CPF usage and bank financing.
+            {% elif lease_remaining < 60 %}
+            Approaching the 60-year threshold. CPF usage and bank loan eligibility may be affected.
+            {% else %}
+            Lease is in good standing. Standard CPF usage and financing applies.
+            {% endif %}
+        </div>
+        <div class="lease-bar-wrap">
+            <div class="lease-bar-bg">
+                <div class="lease-bar-fill" style="width:{{ ((lease_remaining / 99) * 100) | int }}%;background:{% if lease_remaining >= 60 %}#10b981{% elif lease_remaining >= 40 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+            </div>
+            <div class="lease-stats">
+                <span>0 yrs</span>
+                <span>{{ lease_year }} — {{ (lease_year | int) + 99 }} ({{ lease_remaining }} yrs left)</span>
+                <span>99 yrs</span>
+            </div>
+        </div>
+        {% if lease_decay %}<p style="font-size:0.78rem;color:#94a3b8;">Annual lease decay: approx. −{{ lease_decay }}%/yr of market value.</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Transaction Table -->
+    <div class="section" style="padding:0;overflow:hidden;">
+        <div style="padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center;">
+            <div class="section-heading" style="margin-bottom:12px;">All Transactions</div>
+            <span style="font-size:0.78rem;color:#94a3b8;">Source: data.gov.sg</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>Floor</th><th>Type</th><th>Area (sqm)</th><th>Price</th><th>$/sqm</th><th>Lease Left</th></tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.month }}</td>
+                        <td>{{ row.storey_range }}</td>
+                        <td><span class="tag">{{ row.flat_type }}</span></td>
+                        <td>{{ row.floor_area_sqm | int }}</td>
+                        <td class="price">S${{ "{:,.0f}".format(row.resale_price) }}</td>
+                        <td class="psqm">S${{ "{:,.0f}".format(row.resale_price / row.floor_area_sqm) if row.floor_area_sqm else '—' }}</td>
+                        <td>{{ row.remaining_lease }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- About -->
+    <div class="section">
+        <div class="section-heading">About Block {{ block }} {{ street | title }}</div>
+        <p class="about-text">
+            Block {{ block }} {{ street | title }} is a public housing (HDB) block located in {{ town | title }}, Singapore.
+            {% if lease_year %}Built in {{ lease_year }} with a 99-year lease, the block has {{ lease_remaining }} years of lease remaining as of {{ now }}.{% endif %}
+            {% if flat_types %}It comprises {{ flat_types | join(', ') | lower }} unit{% if flat_types | length > 1 %}s{% endif %}.{% endif %}
+            {% if count %}There have been {{ count }} resale transactions recorded since January 2017,{% if avg %} with an average price of S${{ "{:,}".format(avg) }}{% endif %}.{% endif %}
+            {% if median_psqm %}The median price per square metre is S${{ "{:,}".format(median_psqm) }}.{% endif %}
+            {% if trend_5y is not none %}Over the past 5 years, resale prices have {% if trend_5y >= 0 %}increased{% else %}decreased{% endif %} by {{ trend_5y | abs }}%.{% endif %}
+            All transaction data is sourced from <a href="https://data.gov.sg" target="_blank" style="color:#0ea5e9;">data.gov.sg</a> and updated monthly.
+        </p>
+    </div>
+
+    <!-- FAQ -->
+    <div class="section">
+        <div class="section-heading">Frequently Asked Questions</div>
+        <div class="faq-item">
+            <div class="faq-q">How much is an HDB flat at Block {{ block }} {{ street | title }} worth?</div>
+            <div class="faq-a">
+                {% if latest %}The latest recorded transaction was S${{ "{:,.0f}".format(latest.resale_price) }} in {{ latest.month }} for a {{ latest.flat_type }} unit.{% endif %}
+                {% if avg %}The average resale price across all {{ count }} transactions since 2017 is S${{ "{:,}".format(avg) }}.{% endif %}
+                Use the estimator above to narrow down by storey and flat type.
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">What is the remaining lease for Block {{ block }} {{ street | title }}?</div>
+            <div class="faq-a">
+                {% if lease_year and lease_remaining %}Block {{ block }} was built in {{ lease_year }} on a 99-year lease, leaving approximately {{ lease_remaining }} years remaining as of {{ now }}.
+                {% if lease_remaining >= 60 %}Standard CPF usage and bank financing apply.
+                {% elif lease_remaining >= 40 %}Buyers should check CPF board eligibility and bank loan conditions carefully.
+                {% else %}Lease below 40 years — significant restrictions on CPF usage and bank financing. Check HDB and CPF guidelines.{% endif %}
+                {% else %}Lease information is not available for this block.{% endif %}
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">What flat types are available at Block {{ block }} {{ street | title }}?</div>
+            <div class="faq-a">
+                Based on historical transactions, Block {{ block }} {{ street | title }} has {{ flat_types | join(' and ') | lower }} units.
+                There have been {{ count }} total resale transactions recorded since January 2017.
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">Have HDB prices at Block {{ block }} {{ street | title }} gone up or down?</div>
+            <div class="faq-a">
+                {% if trend_5y is not none %}
+                Prices at this block have {% if trend_5y >= 0 %}risen by {{ trend_5y }}%{% else %}fallen by {{ trend_5y | abs }}%{% endif %} over the past 5 years.
+                {% if appreciation_rate is not none %}That's approximately {{ appreciation_rate }}% per year.{% endif %}
+                {% else %}There is insufficient data to calculate a 5-year price trend for this block.{% endif %}
+                Check the price trend chart above for year-by-year data.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const BLOCK = '{{ block }}';
+const STREET = '{{ street }}';
+const TOWN = '{{ town }}';
+const AVG_PRICE = {{ avg or 0 }};
+const LEASE_REMAINING = {{ lease_remaining or 0 }};
+
+// ── Chart ──────────────────────────────────────────
+const COLORS = {'2 ROOM':'#f59e0b','3 ROOM':'#10b981','4 ROOM':'#3b82f6','5 ROOM':'#8b5cf6','EXECUTIVE':'#ef4444','MULTI-GENERATION':'#ec4899'};
+let chartInstance = null;
+
+function loadChart(ft) {
+    fetch('/api/trends?block='+encodeURIComponent(BLOCK)+'&street='+encodeURIComponent(STREET)+'&flat_type='+encodeURIComponent(ft))
+    .then(r=>r.json()).then(function(data){
+        if (!data||data.length<2) return;
+        const years=[...new Set(data.map(d=>d.year))].sort();
+        const fts=[...new Set(data.map(d=>d.flat_type))].sort();
+        const datasets=fts.map(function(f){
+            const fd=data.filter(d=>d.flat_type===f);
+            return {label:f.replace(' ROOM','R').replace('EXECUTIVE','Exec'),
+                data:years.map(y=>{const r=fd.find(d=>d.year===y);return r?Math.round(r.avg_price/1000):null;}),
+                borderColor:COLORS[f]||'#94a3b8',tension:0.35,spanGaps:true,pointRadius:4,borderWidth:2,fill:false};
+        });
+        if(chartInstance) chartInstance.destroy();
+        chartInstance=new Chart(document.getElementById('price-chart'),{
+            type:'line',data:{labels:years,datasets},
+            options:{responsive:true,maintainAspectRatio:false,
+                interaction:{mode:'index',intersect:false},
+                plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
+                    tooltip:{callbacks:{label:c=>c.dataset.label+': S$'+c.parsed.y+'K'}}},
+                scales:{y:{ticks:{callback:v=>'S$'+v+'K'},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}
+        });
+    });
+}
+loadChart('');
+
+document.getElementById('chart-toggles').querySelectorAll('.ct-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+        document.querySelectorAll('.ct-btn').forEach(b=>b.classList.remove('active'));
+        this.classList.add('active');
+        loadChart(this.dataset.ft);
+    });
+});
+
+// ── Estimator ──────────────────────────────────────
+function getEstimate() {
+    const storey=document.getElementById('est-storey').value;
+    const ft=document.getElementById('est-flattype').value;
+    if(!ft){alert('Please select a flat type.');return;}
+    fetch('/api/estimate?block='+encodeURIComponent(BLOCK)+'&street='+encodeURIComponent(STREET)+'&town='+encodeURIComponent(TOWN)+'&flat_type='+encodeURIComponent(ft)+'&storey='+encodeURIComponent(storey))
+    .then(r=>r.json()).then(function(d){
+        const el=document.getElementById('est-result');
+        if(!d.estimate){el.style.background='#fff7ed';el.style.borderColor='#fed7aa';document.getElementById('est-value').textContent='No data';document.getElementById('est-range').textContent='No transactions found for this flat type in the last 12 months.';el.style.display='block';return;}
+        document.getElementById('est-value').textContent='S$'+d.estimate.toLocaleString();
+        const psqmStr=d.psqm?' · S$'+d.psqm.toLocaleString()+'/sqm':'';
+        document.getElementById('est-range').textContent=d.note+psqmStr;
+        el.style.background='#f0fdf4';el.style.borderColor='#bbf7d0';
+        el.style.display='block';
+    });
+}
+
+// ── Projector (Bala's Table methodology) ───────────
+function bala(t) {
+    if (t <= 0) return 0;
+    return 1 - Math.pow(1 / 1.035, t);
+}
+function projectValue() {
+    const growth=parseFloat(document.getElementById('proj-growth').value)/100;
+    const years=parseInt(document.getElementById('proj-years').value);
+    const base=AVG_PRICE||0;
+    if(!base){alert('No average price data available.');return;}
+    const t=LEASE_REMAINING;
+    const marketGrowth=Math.pow(1+growth,years);
+    const bt=bala(t), bty=bala(t-years);
+    const leaseRatio=(t>years&&bt>0)?bty/bt:0;
+    const projected=Math.round(base*marketGrowth*leaseRatio);
+    const leaseImpact=((leaseRatio-1)*100).toFixed(1);
+    const el=document.getElementById('proj-output');
+    document.getElementById('proj-yr-label').textContent=years+' year'+(years>1?'s':'');
+    document.getElementById('proj-val').textContent='S$'+projected.toLocaleString();
+    document.getElementById('proj-detail').textContent=
+        'From S$'+base.toLocaleString()+
+        ' · Market: +'+(growth*100).toFixed(0)+'%/yr'+
+        ' · Lease decay (Bala): '+leaseImpact+'% over '+years+' yrs.';
+    el.style.display='block';
+}
+</script>
+{% endblock %}
