@@ -38,6 +38,17 @@
         footer { background: #0f172a; color: #64748b; text-align: center; padding: 32px 20px; font-size: 0.8rem; margin-top: 60px; }
         footer a { color: #94a3b8; }
         footer a:hover { color: white; }
+
+        /* Mobile nav */
+        @media (max-width: 480px) {
+            nav { padding: 0 16px; height: 50px; }
+            .nav-brand { font-size: 0.95rem; }
+            .nav-links { gap: 16px; font-size: 0.8rem; }
+        }
+        @media (max-width: 360px) {
+            .nav-links { gap: 12px; }
+            .nav-links a:not(:last-child) { display: none; }
+        }
     </style>
     {% block head %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>

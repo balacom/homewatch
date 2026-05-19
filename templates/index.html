@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}HomeWatch SG — HDB Resale Prices in Singapore{% endblock %}
 {% block description %}Search HDB resale prices for any block, street, town or postal code in Singapore. 351,000+ transactions since 2017 across 26 towns. Free, updated monthly.{% endblock %}
 {% block og_title %}HomeWatch SG — HDB Resale Prices in Singapore{% endblock %}
@@ -25,8 +25,9 @@
     .search-field input::placeholder { color: #94a3b8; }
     .search-clear { display: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; border: none; cursor: pointer; color: #64748b; font-size: 14px; margin-right: 6px; flex-shrink: 0; line-height: 1; transition: background 0.15s, color 0.15s; }
     .search-clear:hover { background: #cbd5e1; color: #1e293b; }
-    .search-field button.search-btn { flex-shrink: 0; background: #0f172a; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-    .search-field button.search-btn:hover { background: #1e3a5f; }
+    .search-btn { display: flex; align-items: center; gap: 6px; flex-shrink: 0; background: #0f172a; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    .search-btn:hover { background: #1e3a5f; }
+    .search-btn-icon { display: none; }
 
     /* Flat type pills */
     .type-pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center; }
@@ -80,6 +81,38 @@
     .town-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
     .town-meta span { display: block; font-size: 0.75rem; color: #64748b; }
     .town-price { font-size: 0.85rem; font-weight: 600; color: #0ea5e9; margin-top: 6px; }
+
+    /* ── Mobile responsive ───────────────────────────── */
+    @media (max-width: 600px) {
+        .hero { padding: 44px 16px 36px; }
+        .hero-sub { font-size: 0.875rem; margin-bottom: 24px; }
+        .stats { gap: 24px; margin-bottom: 28px; }
+        .stat-num { font-size: 1.6rem; }
+
+        /* Icon-only search button on small screens */
+        .search-field { padding: 5px 5px 5px 14px; border-radius: 10px; }
+        .search-btn { padding: 10px 12px; border-radius: 8px; }
+        .search-btn-text { display: none; }
+        .search-btn-icon { display: block; }
+
+        .type-pills { gap: 6px; margin-top: 10px; }
+        .pill { padding: 4px 10px; font-size: 0.75rem; }
+
+        .ac-dropdown { border-radius: 8px; }
+        .ac-group-header { padding: 6px 12px 3px; }
+        .ac-item { padding: 8px 12px 8px 10px; gap: 8px; }
+        .ac-icon-wrap { width: 26px; height: 26px; border-radius: 6px; }
+        .ac-tip { display: none; }
+
+        .towns-section { padding: 32px 0 40px; }
+        .town-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+        .town-card { padding: 12px 14px; }
+    }
+    @media (max-width: 380px) {
+        .stats { gap: 16px; }
+        .stat-num { font-size: 1.4rem; }
+        .town-grid { grid-template-columns: 1fr 1fr; }
+    }
 </style>
 {% endblock %}
 
@@ -115,7 +148,10 @@
                            placeholder="Block, street, town or postal code…"
                            autocomplete="off" spellcheck="false" />
                     <button type="button" class="search-clear" id="search-clear" aria-label="Clear search">&#x2715;</button>
-                    <button type="submit" class="search-btn">Search</button>
+                    <button type="submit" class="search-btn">
+                        <svg class="search-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <span class="search-btn-text">Search</span>
+                    </button>
                 </div>
                 <div class="type-pills">
                     <button type="button" class="pill active" data-val="">All types</button>
@@ -205,7 +241,6 @@
         activeIdx = -1;
         if (!data.length) { hide(); return; }
 
-        // Group results
         const groups = {};
         data.forEach(function(s, i) {
             const g = s._recent ? 'recent' : s.type;
