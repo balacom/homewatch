@@ -9,6 +9,13 @@
     {% set _url %}{% block canonical %}https://homewatch.sg{% endblock %}{% endset %}
     <meta name="description" content="{{ _desc }}">
     <link rel="canonical" href="{{ _url }}">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0b2447">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HomeWatch">
+    <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="HomeWatch SG">
     <meta property="og:title" content="{{ _title }}">
@@ -98,5 +105,12 @@
         {% block footer_stats %}{% endblock %}
         <div>Data sourced from <a href="https://data.gov.sg" target="_blank">data.gov.sg</a> &bull; Updated monthly &bull; &copy; 2026 HomeWatch SG</div>
     </footer>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
 </body>
 </html>

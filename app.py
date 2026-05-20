@@ -508,6 +508,18 @@ def robots():
     content = "User-agent: *\nAllow: /\nSitemap: https://homewatch.sg/sitemap.xml\n"
     return Response(content, mimetype='text/plain')
 
+@app.route('/manifest.json')
+def manifest():
+    from flask import send_from_directory
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
+
+@app.route('/sw.js')
+def sw():
+    from flask import send_from_directory
+    resp = send_from_directory('static', 'sw.js', mimetype='application/javascript')
+    resp.headers['Service-Worker-Allowed'] = '/'
+    return resp
+
 @app.route('/api/estimate')
 def api_estimate():
     from datetime import datetime
