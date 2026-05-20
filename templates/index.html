@@ -179,10 +179,50 @@
         .ac-dropdown { display: none !important; }
         .ac-tip { display: none; }
     }
+
+    /* PWA install banner */
+    .pwa-banner {
+        display: none;
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 900;
+        background: #0b2447; color: white;
+        padding: 14px 16px; align-items: center; gap: 12px;
+        box-shadow: 0 -4px 20px rgba(6,0,151,0.2);
+        animation: slideUp 0.25s ease;
+    }
+    .pwa-banner.visible { display: flex; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .pwa-banner-icon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
+    .pwa-banner-text { flex: 1; min-width: 0; }
+    .pwa-banner-text strong { display: block; font-size: 0.9rem; font-weight: 700; }
+    .pwa-banner-text span { font-size: 0.78rem; color: #a8c0db; }
+    .pwa-install-btn {
+        background: #1b5299; color: white; border: none; border-radius: 8px;
+        padding: 8px 16px; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; flex-shrink: 0; white-space: nowrap;
+        transition: background 0.15s;
+    }
+    .pwa-install-btn:hover { background: #060097; }
+    .pwa-dismiss {
+        background: none; border: none; color: #7a93b8; font-size: 18px;
+        cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1;
+    }
+    .pwa-ios-hint { font-size: 0.78rem; color: #a8c0db; }
+    .pwa-ios-hint svg { vertical-align: middle; margin: 0 2px; }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- PWA install banner -->
+<div id="pwa-banner" class="pwa-banner">
+    <img src="/static/icons/icon-192.png" class="pwa-banner-icon" alt="">
+    <div class="pwa-banner-text">
+        <strong>Add to Home Screen</strong>
+        <span id="pwa-banner-sub">Install HomeWatch for quick access</span>
+    </div>
+    <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
+    <button class="pwa-dismiss" id="pwa-dismiss" aria-label="Dismiss">&#x2715;</button>
+</div>
 
 <!-- Mobile full-screen search overlay -->
 <div id="mob-overlay" class="mob-overlay" role="dialog" aria-modal="true" aria-label="Search">
@@ -500,6 +540,60 @@
             this.classList.add('active');
             document.getElementById('flat-type-val').value = this.dataset.val;
         });
+    });
+
+    // ── PWA install banner ────────────────────────────────
+    const banner      = document.getElementById('pwa-banner');
+    const installBtn  = document.getElementById('pwa-install-btn');
+    const dismissBtn  = document.getElementById('pwa-dismiss');
+    const bannerSub   = document.getElementById('pwa-banner-sub');
+    const DISMISSED_KEY = 'hw_pwa_dismissed';
+    let deferredPrompt = null;
+
+    function isStandalone() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    }
+    function isIOS() {
+        return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    }
+    function isSafari() {
+        return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    }
+
+    if (!isStandalone() && !localStorage.getItem(DISMISSED_KEY)) {
+        if (isIOS() && isSafari()) {
+            // iOS: no beforeinstallprompt — show manual instructions
+            bannerSub.innerHTML = 'Tap <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> then <strong style="color:white">Add to Home Screen</strong>';
+            installBtn.style.display = 'none';
+            setTimeout(function() { banner.classList.add('visible'); }, 2000);
+        }
+        // Android: wait for Chrome's beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            setTimeout(function() { banner.classList.add('visible'); }, 1500);
+        });
+    }
+
+    installBtn.addEventListener('click', function() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(r) {
+            deferredPrompt = null;
+            banner.classList.remove('visible');
+            if (r.outcome === 'accepted') localStorage.setItem(DISMISSED_KEY, '1');
+        });
+    });
+
+    dismissBtn.addEventListener('click', function() {
+        banner.classList.remove('visible');
+        localStorage.setItem(DISMISSED_KEY, '1');
+    });
+
+    // Hide banner if already installed
+    window.addEventListener('appinstalled', function() {
+        banner.classList.remove('visible');
+        localStorage.setItem(DISMISSED_KEY, '1');
     });
 })();
 </script>
