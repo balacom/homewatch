@@ -38,21 +38,19 @@
     .street-meta .s-median { font-weight: 700; color: #1b5299; }
     .street-chevron { color: #7a93b8; font-size: 0.8rem; flex-shrink: 0; transition: transform 0.2s; }
 
-    /* Block list inside each street */
-    .block-list { padding: 0 6px 6px; }
-    .block-row {
-        display: flex; align-items: center; gap: 0;
-        padding: 8px 12px; border-radius: 6px;
+    /* Block chips inside each street */
+    .block-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px 14px; }
+    .block-chip {
+        display: inline-flex; flex-direction: column;
+        padding: 8px 12px; border-radius: 8px;
+        border: 1px solid #e5e9f0; background: #f8fafd;
         text-decoration: none; color: inherit;
-        border-bottom: 1px solid #f0f4fa;
-        transition: background 0.1s;
+        min-width: 140px; transition: background 0.12s, border-color 0.12s;
     }
-    .block-row:last-child { border-bottom: none; }
-    .block-row:hover { background: #f0f4fa; }
-    .blk-num   { font-size: 0.85rem; font-weight: 700; color: #0b2447; width: 88px; flex-shrink: 0; }
-    .blk-price { font-size: 0.85rem; font-weight: 700; color: #1b5299; flex: 1; }
-    .blk-trend { font-size: 0.78rem; font-weight: 600; width: 72px; text-align: right; }
-    .blk-arrow { color: #c7d3e5; font-size: 11px; margin-left: 10px; flex-shrink: 0; }
+    .block-chip:hover { background: #eef2fb; border-color: #bfcfe8; }
+    .blk-num   { font-size: 0.82rem; font-weight: 700; color: #0b2447; margin-bottom: 2px; }
+    .blk-price { font-size: 0.82rem; font-weight: 700; color: #1b5299; }
+    .blk-trend { font-size: 0.72rem; font-weight: 600; margin-top: 2px; }
     .trend-up   { color: #10b981; }
     .trend-down { color: #ef4444; }
     .trend-na   { color: #94a3b8; }
@@ -64,10 +62,7 @@
         .ts-num { font-size: 1.1rem; }
         .street-header { padding: 12px 14px; flex-wrap: wrap; gap: 6px; }
         .street-meta { gap: 10px; font-size: 0.73rem; }
-        .block-row { padding: 8px 8px; }
-        .blk-num { width: 72px; font-size: 0.82rem; }
-        .blk-price { font-size: 0.82rem; }
-        .blk-trend { width: 60px; font-size: 0.75rem; }
+        .block-chip { min-width: calc(50% - 4px); flex: 1 1 calc(50% - 4px); }
     }
 </style>
 {% endblock %}
@@ -117,7 +112,7 @@
         </summary>
         <div class="block-list">
             {% for blk in street.blocks %}
-            <a href="/block/{{ blk.block }}/{{ street.slug }}" class="block-row">
+            <a href="/block/{{ blk.block }}/{{ street.slug }}" class="block-chip">
                 <span class="blk-num">Blk {{ blk.block }}</span>
                 <span class="blk-price">S${{ "{:,.0f}".format(blk.median_price) }}</span>
                 {% if blk.trend_5y is not none %}
@@ -127,7 +122,6 @@
                 {% else %}
                 <span class="blk-trend trend-na">—</span>
                 {% endif %}
-                <span class="blk-arrow">›</span>
             </a>
             {% endfor %}
         </div>

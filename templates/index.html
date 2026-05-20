@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}HomeWatch SG — HDB Resale Prices in Singapore{% endblock %}
+{% block title %}HDB Resale Price Lookup — HomeWatch SG{% endblock %}
 {% block description %}Search HDB resale prices for any block, street, town or postal code in Singapore. 351,000+ transactions since 2017 across 26 towns. Free, updated monthly.{% endblock %}
 {% block og_title %}HomeWatch SG — HDB Resale Prices in Singapore{% endblock %}
 {% block canonical %}https://homewatch.sg{% endblock %}
@@ -15,7 +15,6 @@
     }
     .hero h1 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
     .hero-sub { color: #a8c0db; font-size: 1rem; margin-bottom: 36px; }
-
 
     /* Search */
     .search-wrap { max-width: 640px; margin: 0 auto; position: relative; }
@@ -55,7 +54,7 @@
     .pill:hover { background: rgba(255,255,255,0.22); color: white; }
     .pill.active { background: #c10fff; color: white; border-color: #c10fff; font-weight: 600; }
 
-    /* Autocomplete dropdown */
+    /* Autocomplete dropdown (desktop) */
     .ac-dropdown {
         position: absolute; top: calc(100% + 8px); left: 0; right: 0;
         background: white; border-radius: 12px;
@@ -90,6 +89,59 @@
     .ac-tip { padding: 7px 16px; font-size: 0.72rem; color: #7a93b8; border-top: 1px solid #f0f4fa; display: flex; gap: 12px; }
     .ac-tip kbd { background: #f0f4fa; border: 1px solid #e5e9f0; border-radius: 3px; padding: 0 4px; font-size: 0.7rem; font-family: inherit; }
 
+    /* ── Mobile full-screen search overlay ───────────────── */
+    .mob-overlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 999;
+        background: white; flex-direction: column;
+    }
+    .mob-overlay.active { display: flex; }
+    .mob-ov-header {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px;
+        border-bottom: 1px solid #e5e9f0;
+        flex-shrink: 0;
+    }
+    .mob-back {
+        background: none; border: none; padding: 6px 8px; cursor: pointer;
+        color: #0b2447; display: flex; align-items: center; flex-shrink: 0;
+        border-radius: 8px; transition: background 0.12s;
+    }
+    .mob-back:active { background: #f0f4fa; }
+    .mob-input-wrap {
+        flex: 1; display: flex; align-items: center;
+        background: #f5f7fa; border-radius: 10px; padding: 0 10px; gap: 8px;
+    }
+    .mob-input-wrap svg { color: #7a93b8; flex-shrink: 0; }
+    .mob-input {
+        flex: 1; border: none; outline: none; font-size: 1rem;
+        color: #0b2447; background: transparent; padding: 10px 0; min-width: 0;
+    }
+    .mob-input::placeholder { color: #7a93b8; }
+    .mob-clear {
+        display: none; background: #e5e9f0; border: none; border-radius: 50%;
+        width: 22px; height: 22px; cursor: pointer; color: #4a6080;
+        font-size: 11px; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .mob-ov-pills {
+        display: flex; gap: 6px; padding: 10px 14px 8px;
+        border-bottom: 1px solid #f0f4fa; flex-shrink: 0;
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .mob-ov-pills::-webkit-scrollbar { display: none; }
+    .mob-pill {
+        background: #f0f4fa; color: #4a6080;
+        border: 1px solid #e5e9f0; border-radius: 20px;
+        padding: 5px 14px; font-size: 0.8rem; cursor: pointer;
+        transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+    }
+    .mob-pill.active { background: #c10fff; color: white; border-color: #c10fff; font-weight: 600; }
+    .mob-results { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .mob-results .ac-group-header { padding: 10px 16px 4px; }
+    .mob-results .ac-item { padding: 13px 16px 13px 14px; }
+    .mob-results .ac-icon-wrap { width: 34px; height: 34px; }
+
     /* Towns section */
     .towns-section { padding: 48px 0 60px; }
     .section-title { font-size: 1.2rem; font-weight: 800; color: #0b2447; margin-bottom: 4px; }
@@ -115,11 +167,6 @@
         .search-btn-icon { display: block; }
         .type-pills { gap: 6px; margin-top: 10px; }
         .pill { padding: 4px 10px; font-size: 0.75rem; }
-        .ac-dropdown { border-radius: 8px; }
-        .ac-group-header { padding: 6px 12px 3px; }
-        .ac-item { padding: 8px 12px 8px 10px; gap: 8px; }
-        .ac-icon-wrap { width: 26px; height: 26px; border-radius: 6px; }
-        .ac-tip { display: none; }
         .towns-section { padding: 32px 0 40px; }
         .town-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
         .town-card { padding: 12px 14px; }
@@ -127,10 +174,45 @@
     @media (max-width: 380px) {
         .town-grid { grid-template-columns: 1fr 1fr; }
     }
+    /* Hide desktop dropdown on mobile so it never flashes */
+    @media (max-width: 600px) {
+        .ac-dropdown { display: none !important; }
+        .ac-tip { display: none; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Mobile full-screen search overlay -->
+<div id="mob-overlay" class="mob-overlay" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="mob-ov-header">
+        <button class="mob-back" id="mob-back" aria-label="Close search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+            </svg>
+        </button>
+        <div class="mob-input-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="mob-input" class="mob-input"
+                   placeholder="Block, street, town or postal code…"
+                   autocomplete="off" spellcheck="false" enterkeyhint="search" />
+            <button class="mob-clear" id="mob-clear" aria-label="Clear">&#x2715;</button>
+        </div>
+    </div>
+    <div class="mob-ov-pills" id="mob-pills">
+        <button class="mob-pill active" data-val="">All types</button>
+        <button class="mob-pill" data-val="2 ROOM">2 Room</button>
+        <button class="mob-pill" data-val="3 ROOM">3 Room</button>
+        <button class="mob-pill" data-val="4 ROOM">4 Room</button>
+        <button class="mob-pill" data-val="5 ROOM">5 Room</button>
+        <button class="mob-pill" data-val="EXECUTIVE">Executive</button>
+    </div>
+    <div id="mob-results" class="mob-results"></div>
+</div>
+
 <div class="hero">
     <div class="container">
         <h1>HDB Resale Prices in Singapore</h1>
@@ -193,13 +275,24 @@
     const dropdown = document.getElementById('ac-dropdown');
     const form     = document.getElementById('search-form');
     const clearBtn = document.getElementById('search-clear');
+
+    // Mobile overlay elements
+    const overlay   = document.getElementById('mob-overlay');
+    const mobInput  = document.getElementById('mob-input');
+    const mobClear  = document.getElementById('mob-clear');
+    const mobBack   = document.getElementById('mob-back');
+    const mobResults= document.getElementById('mob-results');
+
     let timer, suggestions = [], activeIdx = -1;
+    let mobTimer, mobSuggestions = [];
 
     const RECENT_KEY = 'hw_recents_v1';
     const MAX_RECENTS = 5;
 
+    function isMobile() { return window.matchMedia('(max-width: 600px)').matches; }
+
     function saveRecent(s) {
-        let list = getRecents().filter(r => r.label !== s.label);
+        let list = getRecents().filter(function(r) { return r.label !== s.label; });
         list.unshift(Object.assign({}, s, {_recent: true}));
         list = list.slice(0, MAX_RECENTS);
         try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(e) {}
@@ -227,9 +320,8 @@
     const GROUP_LABEL = { recent: 'Recent Searches', town: 'Towns', block: 'Blocks', street: 'Streets' };
     const GROUP_ORDER = ['recent', 'town', 'block', 'street'];
 
-    function show(data, q) {
-        suggestions = data; activeIdx = -1;
-        if (!data.length) { hide(); return; }
+    function buildHtml(data, q) {
+        if (!data.length) return '';
         const groups = {};
         data.forEach(function(s, i) {
             const g = s._recent ? 'recent' : s.type;
@@ -249,59 +341,159 @@
                     + '</div><span class="ac-arrow">›</span></div>';
             });
         });
+        return html;
+    }
+
+    // ── Desktop autocomplete ──────────────────────────────
+    function show(data, q) {
+        suggestions = data; activeIdx = -1;
+        if (!data.length) { hide(); return; }
+        let html = buildHtml(data, q);
         html += '<div class="ac-tip"><span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span><kbd>↵</kbd> Select</span><span><kbd>Esc</kbd> Close</span></div>';
         dropdown.innerHTML = html;
         dropdown.style.display = 'block';
         dropdown.querySelectorAll('.ac-item').forEach(function(el) {
-            el.addEventListener('mousedown', function(e) { e.preventDefault(); pick(+el.dataset.i); });
+            el.addEventListener('mousedown', function(e) { e.preventDefault(); pick(suggestions, +el.dataset.i); });
         });
     }
-    function pick(i) {
-        const s = suggestions[i];
+    function hide() { dropdown.style.display = 'none'; activeIdx = -1; }
+
+    // ── Mobile overlay autocomplete ───────────────────────
+    function mobShow(data, q) {
+        mobSuggestions = data;
+        const html = buildHtml(data, q);
+        mobResults.innerHTML = html || '<div style="padding:24px 16px;color:#7a93b8;font-size:0.9rem;">No results found.</div>';
+        mobResults.querySelectorAll('.ac-item').forEach(function(el) {
+            el.addEventListener('click', function() { pick(mobSuggestions, +el.dataset.i); });
+        });
+    }
+
+    function pick(list, i) {
+        const s = list[i];
         saveRecent(s);
+        closeMobOverlay();
         if (s.type === 'town') {
             window.location.href = '/town/' + s.town.toLowerCase().replace(/ /g,'-').replace(/\//g,'-');
         } else if (s.type === 'block') {
             window.location.href = '/block/' + encodeURIComponent(s.block) + '/' + s.street.toLowerCase().replace(/ /g,'-');
-        } else { input.value = s.label; hide(); form.submit(); }
+        } else {
+            input.value = s.label; hide(); form.submit();
+        }
     }
-    function hide() { dropdown.style.display = 'none'; activeIdx = -1; }
 
-    function fetchSuggestions(q) {
-        clearTimeout(timer);
-        timer = setTimeout(function() {
-            fetch('/autocomplete?q=' + encodeURIComponent(q))
-                .then(function(r) { return r.json(); })
-                .then(function(data) { show(data, q); });
-        }, 180);
+    function fetchSuggestions(q, callback) {
+        fetch('/autocomplete?q=' + encodeURIComponent(q))
+            .then(function(r) { return r.json(); })
+            .then(callback);
     }
+
+    // ── Desktop input events ──────────────────────────────
+    input.addEventListener('focus', function() {
+        if (isMobile()) { openMobOverlay(); return; }
+        if (!this.value.trim()) { const r = getRecents(); if (r.length) show(r, ''); }
+    });
     input.addEventListener('input', function() {
+        if (isMobile()) return;
         clearTimeout(timer);
         clearBtn.style.display = this.value ? 'flex' : 'none';
         const q = this.value.trim();
         if (!q) { const r = getRecents(); if (r.length) show(r, ''); else hide(); return; }
         if (q.length < 2) { hide(); return; }
-        fetchSuggestions(q);
-    });
-    input.addEventListener('focus', function() {
-        if (!this.value.trim()) { const r = getRecents(); if (r.length) show(r, ''); }
+        timer = setTimeout(function() { fetchSuggestions(q, function(data) { show(data, q); }); }, 180);
     });
     clearBtn.addEventListener('click', function() {
         input.value = ''; clearBtn.style.display = 'none'; input.focus();
         const r = getRecents(); if (r.length) show(r, ''); else hide();
     });
     input.addEventListener('keydown', function(e) {
+        if (isMobile()) return;
         const items = dropdown.querySelectorAll('.ac-item');
         if (!items.length && e.key !== 'Escape') return;
         if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx+1, items.length-1); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx-1, -1); }
-        else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); pick(activeIdx); return; }
+        else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); pick(suggestions, activeIdx); return; }
         else if (e.key === 'Escape') { hide(); return; }
         else return;
         items.forEach(function(el,i){ el.classList.toggle('active', i===activeIdx); });
         if (activeIdx >= 0) items[activeIdx].scrollIntoView({block:'nearest'});
     });
     document.addEventListener('click', function(e) { if (!e.target.closest('.search-wrap')) hide(); });
+
+    // ── Mobile overlay ────────────────────────────────────
+    function openMobOverlay() {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        mobInput.value = input.value;
+        mobClear.style.display = mobInput.value ? 'flex' : 'none';
+        setTimeout(function() { mobInput.focus(); }, 60);
+        // Show recents or existing results
+        const q = mobInput.value.trim();
+        if (!q) {
+            const r = getRecents();
+            if (r.length) { mobSuggestions = r; mobShow(r, ''); }
+            else { mobResults.innerHTML = '<div style="padding:24px 16px;color:#7a93b8;font-size:0.9rem;">Start typing to search…</div>'; }
+        } else {
+            fetchSuggestions(q, function(data) { mobShow(data, q); });
+        }
+    }
+
+    function closeMobOverlay() {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    mobBack.addEventListener('click', closeMobOverlay);
+
+    mobInput.addEventListener('input', function() {
+        clearTimeout(mobTimer);
+        input.value = this.value; // keep main input in sync
+        mobClear.style.display = this.value ? 'flex' : 'none';
+        const q = this.value.trim();
+        if (!q) {
+            const r = getRecents();
+            if (r.length) { mobSuggestions = r; mobShow(r, ''); }
+            else { mobResults.innerHTML = '<div style="padding:24px 16px;color:#7a93b8;font-size:0.9rem;">Start typing to search…</div>'; }
+            return;
+        }
+        if (q.length < 2) return;
+        mobTimer = setTimeout(function() { fetchSuggestions(q, function(data) { mobShow(data, q); }); }, 180);
+    });
+
+    mobInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const q = this.value.trim();
+            if (!q) return;
+            closeMobOverlay();
+            input.value = q;
+            form.submit();
+        } else if (e.key === 'Escape') {
+            closeMobOverlay();
+        }
+    });
+
+    mobClear.addEventListener('click', function() {
+        mobInput.value = ''; input.value = '';
+        this.style.display = 'none';
+        mobInput.focus();
+        const r = getRecents();
+        if (r.length) { mobSuggestions = r; mobShow(r, ''); }
+        else { mobResults.innerHTML = '<div style="padding:24px 16px;color:#7a93b8;font-size:0.9rem;">Start typing to search…</div>'; }
+    });
+
+    // ── Mobile flat-type pills (overlay) ──────────────────
+    document.querySelectorAll('.mob-pill').forEach(function(pill) {
+        pill.addEventListener('click', function() {
+            document.querySelectorAll('.mob-pill').forEach(function(p){ p.classList.remove('active'); });
+            this.classList.add('active');
+            document.getElementById('flat-type-val').value = this.dataset.val;
+            // Mirror active state to hero pills
+            document.querySelectorAll('.pill').forEach(function(p){
+                p.classList.toggle('active', p.dataset.val === pill.dataset.val);
+            });
+        });
+    });
+
+    // ── Desktop flat-type pills ───────────────────────────
     document.querySelectorAll('.pill').forEach(function(pill) {
         pill.addEventListener('click', function() {
             document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
