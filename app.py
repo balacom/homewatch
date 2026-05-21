@@ -221,12 +221,29 @@ def search():
         params += [block, street]
         display_q = f"Blk {block} {street.title()}"
     elif re.match(r'^\d{6}$', q):
-        # Postal code — resolve via OneMap
+        # Postal code — resolve via OneMap then redirect to block page
         blk, st = resolve_postal(q)
         if blk and st:
+            normalized = normalize_street(st)
+            row = conn.execute(
+                "SELECT DISTINCT street_name FROM transactions WHERE block = ? AND street_name = ? LIMIT 1",
+                (blk, normalized)
+            ).fetchone()
+            if not row:
+                first_word = normalized.split()[0]
+                row = conn.execute(
+                    "SELECT DISTINCT street_name FROM transactions WHERE block = ? AND street_name LIKE ? LIMIT 1",
+                    (blk, f'{first_word}%')
+                ).fetchone()
+            if row:
+                from flask import redirect
+                conn.close()
+                slug = row['street_name'].lower().replace(' ', '-')
+                return redirect(f'/block/{blk}/{slug}')
+            # No DB match — fall back to results page
             sql += " AND block = ? AND street_name LIKE ?"
             count_sql += " AND block = ? AND street_name LIKE ?"
-            params += [blk, f'%{st.upper()}%']
+            params += [blk, f'%{normalized.split()[0]}%']
             display_q = f"Blk {blk} {st.title()}"
     elif q and _parse_block_street(q.upper()):
         # Combined "block street" query e.g. "627 Hougang Ave 8"
